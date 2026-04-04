@@ -1,0 +1,24 @@
+[
+  {
+    "task_id": "welcome_brand_female",
+    "preset": "brand_female_01",
+    "texts": [
+      "欢迎使用本次活动签到服务。",
+      "请根据页面提示完成后续操作。",
+      "如需帮助，请联系现场工作人员。"
+    ],
+    "output_dir": "outputs/preset_tasks/welcome_brand_female",
+    "merged_output": "outputs/preset_tasks/welcome_brand_female/final.wav",
+    "pause_ms": 400
+  },
+  {
+    "task_id": "assistant_steps",
+    "preset": "assistant_female_01",
+    "texts": [
+      "第一步，请先确认你的输入参数。",
+      "第二步，系统会自动生成语音结果。",
+      "第三步，你可以继续复用当前音色完成批量生产。"
+    ],
+    "merge": true
+  }
+]

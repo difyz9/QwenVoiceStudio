@@ -736,6 +736,32 @@ outputs/ivr/
 }
 ```
 
+如果你更想直接使用 JSON 数组，也支持下面这种格式：
+
+```json
+[
+	{
+		"id": "brand_female_01",
+		"name": "品牌女声-清晰亲和",
+		"language": "Chinese",
+		"ref_text": "你好，欢迎使用我们的智能语音服务，接下来我会为你介绍主要功能。",
+		"instruct": "年轻女性，声音清晰自然，亲和专业，语速适中，适合产品引导和品牌播报。"
+	},
+	{
+		"id": "brand_male_01",
+		"name": "品牌男声-稳重旁白",
+		"language": "Chinese",
+		"ref_text": "欢迎来到本次演示现场，接下来请跟随我的讲解了解核心内容。",
+		"instruct": "中青年男性，中低音，稳重清晰，节奏平稳，适合宣传片旁白和正式播报。"
+	}
+]
+```
+
+两种格式现在都支持：
+
+- 顶层对象：`{"presets": [...]}`
+- 顶层数组：`[...]`
+
 字段说明：
 
 - `id`: 音色唯一标识，后续复用时就传这个值
@@ -759,6 +785,39 @@ python examples/build_voice_presets.py \
 	--config configs/voice_presets.example.json \
 	--library-dir assets/voice_presets
 ```
+
+如果你想直接按 JSON 数组文件生成，可以执行：
+
+```bash
+python examples/build_voice_presets.py \
+	--config configs/voice_presets.array.example.json \
+	--library-dir assets/voice_presets
+```
+
+如果你不想落文件，也可以直接把 JSON 文本作为参数传入：
+
+```bash
+python examples/build_voice_presets.py \
+	--config-json '[
+	  {
+	    "id": "brand_female_01",
+	    "name": "品牌女声-清晰亲和",
+	    "language": "Chinese",
+	    "ref_text": "你好，欢迎使用我们的智能语音服务，接下来我会为你介绍主要功能。",
+	    "instruct": "年轻女性，声音清晰自然，亲和专业，语速适中，适合产品引导和品牌播报。"
+	  },
+	  {
+	    "id": "assistant_female_01",
+	    "name": "助手女声-轻快友好",
+	    "language": "Chinese",
+	    "ref_text": "你好呀，我已经准备好了，接下来我会一步一步协助你完成整个流程。",
+	    "instruct": "年轻女性，明亮轻快，友好自然，略带科技感，适合作为数字助手与引导角色。"
+	  }
+	]' \
+	--library-dir assets/voice_presets
+```
+
+如果你的目标是“通过 JSON 文本配置一批音色，再一次性生成”，推荐优先使用顶层数组格式，因为更适合从别的系统直接导出或拼接。
 
 执行后会生成类似结构：
 
@@ -864,3 +923,134 @@ python examples/use_voice_preset_batch.py \
 - `ivr_service_female_01`
 
 这样后续批量脚本、配置中心、回传系统都更容易对接。
+
+## 17. 从 JSON 数组任务批量生成音频
+
+如果你已经有一批固定音色，并且想直接通过一个 JSON 数组批量生成业务音频，推荐使用：
+
+- `examples/generate_from_preset_tasks.py`
+
+这个脚本的定位是：
+
+- 输入：任务 JSON 数组
+- 每条任务指定：`preset`、文本数组、输出位置、是否合并
+- 输出：每条任务一组 wav 文件，可选自动合并成一个总音频
+
+### 17.1 任务 JSON 数组格式
+
+示例文件：
+
+- `configs/preset_generation_tasks.array.example.json`
+
+示例内容：
+
+```json
+[
+	{
+		"task_id": "welcome_brand_female",
+		"preset": "brand_female_01",
+		"texts": [
+			"欢迎使用本次活动签到服务。",
+			"请根据页面提示完成后续操作。",
+			"如需帮助，请联系现场工作人员。"
+		],
+		"output_dir": "outputs/preset_tasks/welcome_brand_female",
+		"merged_output": "outputs/preset_tasks/welcome_brand_female/final.wav",
+		"pause_ms": 400
+	},
+	{
+		"task_id": "assistant_steps",
+		"preset": "assistant_female_01",
+		"texts": [
+			"第一步，请先确认你的输入参数。",
+			"第二步，系统会自动生成语音结果。",
+			"第三步，你可以继续复用当前音色完成批量生产。"
+		],
+		"merge": true
+	}
+]
+```
+
+字段说明：
+
+- `task_id`: 当前任务标识，用于默认输出目录命名
+- `preset`: 要使用的音色 id
+- `text`: 单条文本，适合只生成一句
+- `texts`: 文本数组，适合批量生成多句
+- `output_dir`: 当前任务输出目录，可选
+- `merged_output`: 合并后总音频路径，可选
+- `merge`: 如果为 `true`，且未显式指定 `merged_output`，则默认输出 `output_dir/final.wav`
+- `pause_ms`: 当前任务句间静音毫秒数，可选
+- `language`: 可选，默认使用 preset 对应语言
+
+说明：
+
+- `text` 和 `texts` 二选一
+- 如果某条任务没有写 `output_dir`，脚本会自动落到 `outputs/preset_tasks/<task_id>/`
+
+### 17.2 执行方法
+
+```bash
+python examples/generate_from_preset_tasks.py \
+	--library-dir assets/voice_presets \
+	--config configs/preset_generation_tasks.array.example.json
+```
+
+如果你不想落文件，也可以直接传 JSON 文本：
+
+```bash
+python examples/generate_from_preset_tasks.py \
+	--library-dir assets/voice_presets \
+	--config-json '[
+		{
+			"task_id": "welcome_brand_female",
+			"preset": "brand_female_01",
+			"texts": [
+				"欢迎使用本次活动签到服务。",
+				"请根据页面提示完成后续操作。"
+			],
+			"merge": true
+		},
+		{
+			"task_id": "assistant_steps",
+			"preset": "assistant_female_01",
+			"texts": [
+				"第一步，请先确认你的输入参数。",
+				"第二步，系统会自动生成语音结果。"
+			],
+			"pause_ms": 500,
+			"merge": true
+		}
+	]'
+```
+
+### 17.3 适合的场景
+
+这个脚本适合下面这些生产方式：
+
+- 批量生成欢迎语、引导语、播报语
+- 按角色批量生成数字人台词
+- 按品牌音色批量生成短视频旁白
+- 从上游系统导出的 JSON 数组直接驱动音频生产
+
+### 17.4 实现建议
+
+如果你后面要把这套流程接入业务系统，推荐上游统一输出这种结构：
+
+```json
+[
+	{
+		"task_id": "job_001",
+		"preset": "brand_female_01",
+		"texts": ["文案一", "文案二"],
+		"merge": true
+	}
+]
+```
+
+这样你的业务侧只需要做两件事：
+
+1. 选择 `preset id`
+2. 组织 `texts` 数组
+
+音频生产脚本本身就可以保持稳定，不需要频繁改代码。

@@ -26,6 +26,27 @@ def slugify(value: str) -> str:
     return value or "voice_preset"
 
 
+def load_presets(config_path: str, config_json: str) -> list[dict]:
+    if config_json:
+        config = json.loads(config_json)
+    else:
+        path = Path(config_path)
+        with path.open("r", encoding="utf-8") as file:
+            config = json.load(file)
+
+    if isinstance(config, list):
+        presets = config
+    elif isinstance(config, dict):
+        presets = config.get("presets", [])
+    else:
+        raise ValueError("Config must be a JSON array or a JSON object with a 'presets' array.")
+
+    if not presets:
+        raise ValueError("No presets found in config. Expected a JSON array or an object with a 'presets' array.")
+
+    return presets
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Batch build reusable voice presets from a JSON config.")
     parser.add_argument(
@@ -39,6 +60,11 @@ def main() -> None:
         help="Preset config JSON path.",
     )
     parser.add_argument(
+        "--config-json",
+        default="",
+        help="Inline JSON text. Supports either a top-level array or an object with a 'presets' array.",
+    )
+    parser.add_argument(
         "--library-dir",
         default="assets/voice_presets",
         help="Directory where preset assets and metadata will be saved.",
@@ -50,16 +76,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    config_path = Path(args.config)
     library_dir = Path(args.library_dir)
     library_dir.mkdir(parents=True, exist_ok=True)
-
-    with config_path.open("r", encoding="utf-8") as file:
-        config = json.load(file)
-
-    presets = config.get("presets", [])
-    if not presets:
-        raise ValueError("No presets found in config. Expected a JSON object with a 'presets' array.")
+    presets = load_presets(args.config, args.config_json)
 
     model = build_model(args.model)
     manifest = []
