@@ -221,6 +221,12 @@ python examples/reuse_designed_voice_batch.py \
 	--output-dir outputs/reuse_designed_voice_batch
 ```
 
+如果你想把句子之间停顿调长一点，可以加上：
+```bash
+--pause-ms 500
+```
+
+
 执行后会得到：
 
 - `outputs/reuse_designed_voice_batch/line_01.wav`
@@ -453,3 +459,408 @@ python examples/reuse_designed_voice_batch.py \
 	--merged-output outputs/reuse_batch/final.wav \
 	--output-dir outputs/reuse_batch
 ```
+
+## 13. 常用场景与实现方案
+
+下面这些是本地使用 Qwen3-TTS 时最常见的业务场景。核心不是“模型能不能做”，而是“该选哪个模型、怎样组合，才能稳定进入生产”。
+
+### 13.1 产品欢迎语、播报语、通知音
+
+典型特点：
+
+- 文本短
+- 对时延要求不高
+- 需要快速试音色
+- 经常修改文案，但不一定要求绝对固定角色声线
+
+推荐方案：
+
+- 先用 `VoiceDesign`
+- 如果后续文案越来越多，再切到“VoiceDesign 一次 + Base 复用”
+
+落地方式：
+
+1. 用 `examples/voice_design_basic.py` 设计一个满意音色
+2. 满意后，把输出 wav 保存为参考音频
+3. 再用 `examples/reuse_designed_voice_batch.py` 批量生成多条欢迎语或播报语
+
+适用例子：
+
+- App 欢迎语
+- 设备开机提示音
+- 活动开场播报
+- 展厅语音提示
+
+### 13.2 短视频旁白、口播、宣传片解说
+
+典型特点：
+
+- 文案按段落组织
+- 需要整段输出为一个总音频
+- 要求音色一致、停顿自然
+
+推荐方案：
+
+- `VoiceDesign` 先定音色
+- `Base` 负责整批文案生成
+- 使用 `--merged-output` 合并成完整音频
+
+落地方式：
+
+1. 先写一段较短的参考句，设计出目标旁白风格
+2. 使用 `reuse_designed_voice_batch.py` 对每段文案分别生成
+3. 用 `--pause-ms` 控制句间停顿
+4. 输出一个完整 wav，再进剪辑软件做混音或配乐
+
+建议：
+
+- 单句不要太长，长句先人工分段
+- 每段尽量是一个完整语义单位
+- 宣传片旁白更适合“中低音、稳定、吐字清晰”的提示词
+
+### 13.3 数字人、虚拟角色、游戏 NPC
+
+典型特点：
+
+- 角色声音必须长期稳定
+- 同一角色要说很多句不同台词
+- 可能有多个角色
+
+推荐方案：
+
+- 每个角色先用 `VoiceDesign` 生成一段参考音频
+- 再分别为每个角色构建独立的 `voice_clone_prompt`
+- 所有后续台词都走 `Base`
+
+落地方式：
+
+1. 每个角色准备一个角色设定文本
+2. 用 `VoiceDesign` 生成角色参考音频
+3. 保存角色元信息：`角色名 + ref_audio + ref_text + 人设提示词`
+4. 后续批量生成时按角色切换不同 prompt
+
+推荐保存结构：
+
+```text
+assets/voices/
+	narrator/
+		ref.wav
+		ref.txt
+	assistant/
+		ref.wav
+		ref.txt
+	npc_guard/
+		ref.wav
+		ref.txt
+```
+
+如果你后面要做多角色，我建议下一步补一个“按角色配置文件批量生产”的脚本，会比手工传命令稳定很多。
+
+### 13.4 客服语音、IVR、电话外呼
+
+典型特点：
+
+- 句式重复多
+- 内容经常更新
+- 重点是清晰、稳定、可批量生成
+
+推荐方案：
+
+- 优先固定一个品牌音色
+- 如果品牌声线来自你自己定义的人设，先 `VoiceDesign` 再 `Base`
+- 如果接受预置官方音色，可考虑 `CustomVoice`
+
+落地方式：
+
+1. 先确认品牌是否要固定人声形象
+2. 固定后不要频繁改参考音频
+3. 所有模板文案都走批量脚本生成
+4. 输出命名尽量和业务 key 一一对应
+
+推荐命名方式：
+
+```text
+outputs/ivr/
+	welcome.wav
+	queue_notice.wav
+	service_busy.wav
+	verification_code.wav
+```
+
+### 13.5 有声书、长文章朗读
+
+典型特点：
+
+- 文本很长
+- 需要章节级处理
+- 容易遇到长文本停顿、节奏和稳定性问题
+
+推荐方案：
+
+- 不要一次性把全文扔给模型
+- 先按段或按句切分
+- 用固定 prompt 批量生成，再按章节合并
+
+落地方式：
+
+1. 先做文本预处理，按自然段或句号切分
+2. 控制每段长度，避免过长输入
+3. 每一章单独输出一个目录
+4. 最后再把整章或整本书进行后处理拼接
+
+建议：
+
+- 长文案最重要的是切分策略，不是一次生成到底
+- 保留原文索引，方便重生成单段
+- 章节级别输出比全文级别输出更容易维护
+
+### 13.6 多语言播报
+
+典型特点：
+
+- 需要中文、英文、日文等多个版本
+- 希望保持相近风格
+- 不同语言发音效果会有差异
+
+推荐方案：
+
+- 每种语言单独做一次试听
+- `language` 参数显式指定，不要完全依赖自动识别
+- 对不同语言分别优化提示词
+
+落地方式：
+
+1. 同一角色先分别测试中文、英文等语言样本
+2. 每种语言都记录最稳定的一版提示词
+3. 批量生成时按语言分批处理
+
+经验建议：
+
+- 同一个角色跨语言不一定完全等价
+- 最好为不同语言分别存一份参考音频与参数配置
+
+### 13.7 品牌固定音色
+
+典型特点：
+
+- 希望所有内容都保持统一品牌识别度
+- 会跨很多场景反复使用
+
+推荐方案：
+
+- 不要每次重新设计声音
+- 选定一版满意参考音频后冻结下来
+- 后续全部基于同一份 `voice_clone_prompt` 或同一参考音频复用
+
+落地方式：
+
+1. 专门做一个品牌音色评审流程
+2. 选定后固定 `ref.wav` 与 `ref.txt`
+3. 任何新文案都从同一品牌素材出发生成
+4. 不同业务线只修改文本，不修改参考音频
+
+### 13.8 需要快速交互试音，不想先写代码
+
+典型特点：
+
+- 还在探索风格
+- 需要快速试听多种提示词
+- 可能是产品、运营或内容同学先参与试音
+
+推荐方案：
+
+- 先使用本地 Web UI
+- 确认风格后再沉淀为脚本和批量流程
+
+落地方式：
+
+1. 启动 `qwen-tts-demo`
+2. 先试多组 `instruct`
+3. 确定满意风格后，再转成 Python 脚本固化
+
+这一步适合做探索，不适合作为长期生产流程，因为可复用性和可追溯性不如脚本。
+
+## 14. 选型建议
+
+如果你不知道该选哪条路，可以直接按这个规则判断：
+
+- 只想快速出一条试听音频：`VoiceDesign`
+- 已经有满意音色，想批量生产：`Base + ref_audio + ref_text`
+- 想长期维护一个固定角色或品牌声音：`VoiceDesign 一次 + Base 长期复用`
+- 只想从官方预置说话人里选一个稳定声音：`CustomVoice`
+- 要做长文本项目：先切分文本，再批量生成，再合并音频
+
+## 15. 下一步可继续补充的能力
+
+如果你要把这套方案继续往生产方向推进，后面通常还会补这几类工具：
+
+- 从 txt 或 csv 批量读取文案后自动生成音频
+- 按角色配置文件批量生成多角色台词
+- 自动切句、自动停顿、自动合并长文音频
+- 输出文件名与业务 ID 绑定，方便回传到系统
+- 批量失败重试和生成日志记录
+
+## 16. 批量生产常用音色库
+
+如果你的目标是先沉淀一批常用音色，后面在业务里只传“音色名 + 文本”就能直接复用，推荐采用“音色库”方案。
+
+这个方案分成两步：
+
+1. 用 `VoiceDesign` 批量生成参考音色，保存到本地音色库
+2. 用 `Base` 按音色名读取参考音频并批量合成新文本
+
+这次已经补了两份脚本：
+
+- `examples/build_voice_presets.py`: 批量生产常用音色
+- `examples/use_voice_preset_batch.py`: 指定音色名直接复用
+
+以及一份示例配置：
+
+- `configs/voice_presets.example.json`
+
+### 16.1 配置文件格式
+
+示例配置如下：
+
+```json
+{
+	"presets": [
+		{
+			"id": "brand_female_01",
+			"name": "品牌女声-清晰亲和",
+			"language": "Chinese",
+			"ref_text": "你好，欢迎使用我们的智能语音服务，接下来我会为你介绍主要功能。",
+			"instruct": "年轻女性，声音清晰自然，亲和专业，语速适中，适合产品引导和品牌播报。"
+		}
+	]
+}
+```
+
+字段说明：
+
+- `id`: 音色唯一标识，后续复用时就传这个值
+- `name`: 便于人工识别的名称
+- `language`: 参考语音语言
+- `ref_text`: 用于生成参考音频的基准文本
+- `instruct`: 声音设计提示词
+
+建议：
+
+- `id` 尽量稳定，不要频繁修改
+- `ref_text` 要用自然、清晰、能代表目标风格的一句话
+- 一个音色一条参考句就够了，重点是后续长期复用
+
+### 16.2 批量生成音色库
+
+执行：
+
+```bash
+python examples/build_voice_presets.py \
+	--config configs/voice_presets.example.json \
+	--library-dir assets/voice_presets
+```
+
+执行后会生成类似结构：
+
+```text
+assets/voice_presets/
+	index.json
+	brand_female_01/
+		ref.wav
+		ref.txt
+		metadata.json
+	brand_male_01/
+		ref.wav
+		ref.txt
+		metadata.json
+	assistant_female_01/
+		ref.wav
+		ref.txt
+		metadata.json
+```
+
+其中：
+
+- `ref.wav` 是参考音频
+- `ref.txt` 是参考文本
+- `metadata.json` 是音色元信息
+- `index.json` 是音色清单
+
+如果需要重新生成已有音色，可以加：
+
+```bash
+--overwrite
+```
+
+### 16.3 查看可用音色
+
+```bash
+python examples/use_voice_preset_batch.py \
+	--library-dir assets/voice_presets \
+	--list
+```
+
+这个命令会打印当前音色库里的 `preset id`、名称和语言。
+
+### 16.4 指定音色名直接复用
+
+比如你已经生成了 `brand_female_01`，后续可以直接按音色名批量生产：
+
+```bash
+python examples/use_voice_preset_batch.py \
+	--library-dir assets/voice_presets \
+	--preset brand_female_01 \
+	--text "欢迎使用本次活动签到服务。" \
+	--text "请根据页面提示完成后续操作。" \
+	--text "如需帮助，请联系现场工作人员。" \
+	--merged-output outputs/preset_brand_female_01/final.wav \
+	--output-dir outputs/preset_brand_female_01
+```
+
+这样你就不需要每次再传：
+
+- `ref_audio`
+- `ref_text`
+- `instruct`
+
+后续只需要知道音色名即可。
+
+### 16.5 适合的生产方式
+
+这种音色库模式特别适合下面几类项目：
+
+- 品牌固定旁白
+- 多角色数字人
+- 客服与 IVR 模板语音
+- 展厅、设备、系统提示音
+- 短视频团队统一旁白库
+
+### 16.6 推荐管理方式
+
+建议把音色库当作稳定资产管理，而不是每次临时生成。
+
+推荐做法：
+
+1. 先用小范围配置测试几种候选音色
+2. 人工试听后保留正式版本
+3. 固定 `preset id`，不要频繁变更
+4. 后续业务脚本统一按 `preset id` 调用
+5. 如果要升级音色，新增新版本，例如 `brand_female_02`
+
+### 16.7 推荐命名规则
+
+推荐 `id` 命名方式：
+
+```text
+<业务域>_<角色类型>_<版本号>
+```
+
+例如：
+
+- `brand_female_01`
+- `brand_male_01`
+- `assistant_female_01`
+- `narrator_male_02`
+- `ivr_service_female_01`
+
+这样后续批量脚本、配置中心、回传系统都更容易对接。
