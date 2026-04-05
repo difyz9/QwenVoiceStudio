@@ -32,9 +32,7 @@ Qwen Voice Studio 是一个基于 Qwen3-TTS 的开源语音工作台，提供从
 - 项目内置 Swagger / ReDoc 接口文档
 - Docker Compose 一键启动前后端和数据库
 
-## 项目截图建议
-
-如果你准备在 GitHub 上公开项目，建议后续补充这几类截图：
+## 项目截图
 
 - ![登录页](img/001.png)
 - ![仪表盘](img/002.png)
