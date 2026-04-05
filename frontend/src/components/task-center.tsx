@@ -36,12 +36,12 @@ const statusLabelMap: Record<string, string> = {
 };
 
 const statusClassMap: Record<string, string> = {
-  missing: "bg-slate-200 text-slate-700",
-  generating: "bg-amber-100 text-amber-900",
-  failed: "bg-rose-100 text-rose-700",
-  ready: "bg-emerald-100 text-emerald-700",
-  running: "bg-sky-100 text-sky-700",
-  completed: "bg-emerald-100 text-emerald-700",
+  missing: "status-pill bg-slate-200 text-slate-700",
+  generating: "status-pill status-waiting",
+  failed: "status-pill status-failed",
+  ready: "status-pill status-ready",
+  running: "status-pill status-running",
+  completed: "status-pill status-ready",
 };
 
 export function TaskCenter() {
@@ -210,18 +210,18 @@ export function TaskCenter() {
           { label: "失败", value: String(summary.failed) },
           { label: "已完成", value: String(summary.done) },
         ].map((item) => (
-          <article key={item.label} className="rounded-[28px] border border-border bg-panel px-6 py-5 shadow-[0_18px_46px_rgba(24,34,48,0.06)]">
-            <div className="text-xs uppercase tracking-[0.22em] text-slate-500">{item.label}</div>
-            <div className="mt-4 text-3xl font-semibold tracking-tight text-panel-strong">{item.value}</div>
+          <article key={item.label} className="stat-card px-6 py-5">
+            <div className="section-kicker">{item.label}</div>
+            <div className="display-font mt-4 text-4xl font-semibold tracking-tight text-panel-strong">{item.value}</div>
           </article>
         ))}
       </section>
 
-      <section className="rounded-[32px] border border-border bg-panel p-6 shadow-[0_24px_60px_rgba(24,34,48,0.08)] lg:p-8">
+      <section className="surface-panel rounded-[2rem] p-6 lg:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Task Center</div>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-panel-strong">统一任务视图</h2>
+            <div className="section-kicker">Task Center</div>
+            <h2 className="section-title mt-2 text-panel-strong">统一任务视图</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               这里聚合参考音频生成和语音合成任务，作为后续独立 worker 与队列系统的承接页。
             </p>
@@ -237,8 +237,8 @@ export function TaskCenter() {
                 key={option.value}
                 type="button"
                 onClick={() => setFilter(option.value as typeof filter)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  filter === option.value ? "bg-panel-strong text-white" : "bg-[#f2e8d9] text-slate-700"
+                className={`action-button !py-2.5 text-sm font-medium ${
+                  filter === option.value ? "action-button-primary" : "action-button-secondary"
                 }`}
               >
                 {option.label}
@@ -247,11 +247,11 @@ export function TaskCenter() {
           </div>
         </div>
 
-        {error ? <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {isLoading ? <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-600">正在同步任务列表...</div> : null}
+        {error ? <div className="mt-6 rounded-[1.35rem] bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+        {isLoading ? <div className="mt-6 rounded-[1.35rem] bg-slate-100 px-4 py-3 text-sm text-slate-600">正在同步任务列表...</div> : null}
 
         {!isLoading && !error && filteredTasks.length === 0 ? (
-          <div className="mt-6 rounded-[28px] border border-dashed border-border bg-[#fffcf7] px-5 py-6 text-sm leading-7 text-slate-500">
+          <div className="mt-6 rounded-[1.7rem] border border-dashed border-border bg-[rgba(255,255,255,0.64)] px-5 py-6 text-sm leading-7 text-slate-500">
             当前筛选条件下还没有任务记录。
           </div>
         ) : null}
@@ -261,14 +261,14 @@ export function TaskCenter() {
             {filteredTasks.map((task) => (
               <article
                 key={task.task_code}
-                className={`rounded-[28px] border p-5 transition ${
-                  selectedTaskCode === task.task_code ? "border-panel-strong bg-[#f8f1e6]" : "border-border bg-[#fffcf7]"
+                className={`rounded-[1.8rem] border p-5 shadow-[0_14px_34px_rgba(77,52,25,0.06)] transition ${
+                  selectedTaskCode === task.task_code ? "border-panel-strong bg-[rgba(248,241,230,0.92)]" : "border-white/45 bg-[rgba(255,252,247,0.88)]"
                 }`}
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{task.task_type}</div>
-                    <h3 className="mt-2 text-xl font-semibold tracking-tight text-panel-strong">{task.title}</h3>
+                    <h3 className="display-font mt-2 text-3xl font-semibold tracking-tight text-panel-strong">{task.title}</h3>
                     <div className="mt-2 text-sm leading-7 text-slate-600">{task.detail}</div>
                     <div className="mt-2 text-xs text-slate-500">创建时间：{new Date(task.created_at).toLocaleString()}</div>
                   </div>
@@ -289,11 +289,7 @@ export function TaskCenter() {
                 ) : null}
 
                 <div className="mt-4 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => openTask(task.task_code)}
-                    className="inline-flex rounded-full bg-panel-strong px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-                  >
+                  <button type="button" onClick={() => openTask(task.task_code)} className="action-button action-button-primary">
                     查看详情
                   </button>
                   {task.status === "failed" ? (
@@ -301,13 +297,13 @@ export function TaskCenter() {
                       type="button"
                       onClick={() => void retryTask(task.task_code)}
                       disabled={retryingTaskCode === task.task_code}
-                      className="inline-flex rounded-full bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="action-button action-button-danger disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {retryingTaskCode === task.task_code ? "重试中..." : "重试任务"}
                     </button>
                   ) : null}
                   {task.action_path ? (
-                    <Link href={task.action_path} className="inline-flex rounded-full bg-panel-strong px-4 py-2 text-sm font-medium text-white transition hover:opacity-90">
+                    <Link href={task.action_path} className="action-button action-button-secondary">
                       打开相关页面
                     </Link>
                   ) : null}
@@ -316,24 +312,24 @@ export function TaskCenter() {
             ))}
           </div>
 
-          <aside className="rounded-[28px] border border-border bg-[#fffcf7] p-5">
+          <aside className="rounded-[1.8rem] border border-white/45 bg-[rgba(255,252,247,0.88)] p-5 shadow-[0_16px_40px_rgba(77,52,25,0.07)]">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Task Detail</div>
-                <h3 className="mt-2 text-2xl font-semibold tracking-tight text-panel-strong">任务详情</h3>
+                <div className="section-kicker">Task Detail</div>
+                <h3 className="section-title mt-2 text-panel-strong">任务详情</h3>
               </div>
               {selectedTaskCode ? (
-                <button type="button" onClick={closeTask} className="rounded-full bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-100">
+                <button type="button" onClick={closeTask} className="action-button action-button-secondary !px-3 !py-2 text-xs">
                   关闭
                 </button>
               ) : null}
             </div>
 
-            {isDetailLoading ? <div className="mt-5 rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-600">正在读取任务详情...</div> : null}
-            {detailError ? <div className="mt-5 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{detailError}</div> : null}
+            {isDetailLoading ? <div className="mt-5 rounded-[1.35rem] bg-slate-100 px-4 py-3 text-sm text-slate-600">正在读取任务详情...</div> : null}
+            {detailError ? <div className="mt-5 rounded-[1.35rem] bg-rose-50 px-4 py-3 text-sm text-rose-700">{detailError}</div> : null}
 
             {!selectedTaskCode && !isDetailLoading ? (
-              <div className="mt-5 rounded-[24px] border border-dashed border-border bg-white px-4 py-5 text-sm leading-7 text-slate-500">
+              <div className="mt-5 rounded-[1.5rem] border border-dashed border-border bg-white/80 px-4 py-5 text-sm leading-7 text-slate-500">
                 从左侧列表选择一个任务，可以查看输入参数、文本内容、输出路径和失败原因。
               </div>
             ) : null}
@@ -347,36 +343,36 @@ export function TaskCenter() {
 
                 <div>
                   <div className="text-xs uppercase tracking-[0.18em] text-slate-500">来源对象</div>
-                  <div className="mt-2 text-base font-medium text-panel-strong">{selectedTask.source_name}</div>
+                  <div className="display-font mt-2 text-2xl font-medium text-panel-strong">{selectedTask.source_name}</div>
                   <div className="mt-1 text-sm text-slate-500">{selectedTask.source_code}</div>
                 </div>
 
-                <div className="rounded-2xl bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                <div className="surface-muted rounded-[1.35rem] px-4 py-4 text-sm leading-7 text-slate-600">
                   <div className="text-xs uppercase tracking-[0.18em] text-slate-400">状态摘要</div>
                   <div className="mt-2">{selectedTask.detail}</div>
                   <div className="mt-2 text-xs text-slate-500">创建时间：{new Date(selectedTask.created_at).toLocaleString()}</div>
                 </div>
 
                 {selectedTask.instruct ? (
-                  <div className="rounded-2xl bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                  <div className="surface-muted rounded-[1.35rem] px-4 py-4 text-sm leading-7 text-slate-600">
                     <div className="text-xs uppercase tracking-[0.18em] text-slate-400">设计文案</div>
                     <div className="mt-2">{selectedTask.instruct}</div>
                   </div>
                 ) : null}
 
                 {selectedTask.reference_text ? (
-                  <div className="rounded-2xl bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                  <div className="surface-muted rounded-[1.35rem] px-4 py-4 text-sm leading-7 text-slate-600">
                     <div className="text-xs uppercase tracking-[0.18em] text-slate-400">参考文本</div>
                     <div className="mt-2">{selectedTask.reference_text}</div>
                   </div>
                 ) : null}
 
                 {selectedTaskTexts.length > 0 ? (
-                  <div className="rounded-2xl bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+                  <div className="surface-muted rounded-[1.35rem] px-4 py-4 text-sm leading-7 text-slate-600">
                     <div className="text-xs uppercase tracking-[0.18em] text-slate-400">输入文本</div>
                     <div className="mt-2 space-y-2">
                       {selectedTaskTexts.map((text, index) => (
-                        <div key={`${selectedTask.task_code}-${index}`} className="rounded-2xl bg-[#fffcf7] px-3 py-2">
+                        <div key={`${selectedTask.task_code}-${index}`} className="rounded-[1rem] bg-[rgba(255,252,247,0.88)] px-3 py-2">
                           {text}
                         </div>
                       ))}
@@ -385,14 +381,14 @@ export function TaskCenter() {
                 ) : null}
 
                 {selectedTask.output_path ? (
-                  <div className="rounded-2xl bg-white px-4 py-4 text-xs leading-6 text-slate-600 break-all">
+                  <div className="surface-muted rounded-[1.35rem] px-4 py-4 text-xs leading-6 text-slate-600 break-all">
                     <div className="text-xs uppercase tracking-[0.18em] text-slate-400">主输出路径</div>
                     <div className="mt-2">{selectedTask.output_path}</div>
                   </div>
                 ) : null}
 
                 {selectedTaskOutputFiles.length > 0 ? (
-                  <div className="rounded-2xl bg-white px-4 py-4 text-xs leading-6 text-slate-600">
+                  <div className="surface-muted rounded-[1.35rem] px-4 py-4 text-xs leading-6 text-slate-600">
                     <div className="text-xs uppercase tracking-[0.18em] text-slate-400">输出文件</div>
                     <div className="mt-2 space-y-1 break-all">
                       {selectedTaskOutputFiles.map((file) => (
@@ -403,7 +399,7 @@ export function TaskCenter() {
                 ) : null}
 
                 {selectedTask.error_message ? (
-                  <div className="rounded-2xl bg-rose-50 px-4 py-4 text-sm leading-7 text-rose-700">{selectedTask.error_message}</div>
+                  <div className="rounded-[1.35rem] bg-rose-50 px-4 py-4 text-sm leading-7 text-rose-700">{selectedTask.error_message}</div>
                 ) : null}
 
                 <div className="flex flex-wrap gap-3">
@@ -412,14 +408,14 @@ export function TaskCenter() {
                       type="button"
                       onClick={() => void retryTask(selectedTask.task_code)}
                       disabled={retryingTaskCode === selectedTask.task_code}
-                      className="inline-flex rounded-full bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="action-button action-button-danger disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {retryingTaskCode === selectedTask.task_code ? "重试中..." : "重试当前任务"}
                     </button>
                   ) : null}
 
                   {selectedTask.action_path ? (
-                    <Link href={selectedTask.action_path} className="inline-flex rounded-full bg-panel-strong px-4 py-2 text-sm font-medium text-white transition hover:opacity-90">
+                    <Link href={selectedTask.action_path} className="action-button action-button-primary">
                       打开相关页面
                     </Link>
                   ) : null}

@@ -132,21 +132,21 @@ export function SynthesisWorkbench() {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
-      <section className="rounded-[32px] border border-border bg-panel p-6 shadow-[0_24px_60px_rgba(24,34,48,0.08)] lg:p-8">
+      <section className="surface-panel rounded-[2rem] p-6 lg:p-8">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Batch Console</div>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-panel-strong">批量合成表单</h2>
+            <div className="section-kicker">Batch Console</div>
+            <h2 className="section-title mt-2 text-panel-strong">批量合成表单</h2>
           </div>
           <div className="text-sm text-slate-500">多行文本按行拆分，逐条生成 `line_XX.wav`。</div>
         </div>
 
         <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
-          {isLoading ? <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-600">正在同步音色与任务列表...</div> : null}
+          {isLoading ? <div className="rounded-[1.35rem] bg-slate-100 px-4 py-3 text-sm text-slate-600">正在同步音色与任务列表...</div> : null}
           <label className="block">
             <div className="mb-2 text-sm font-medium text-slate-700">预置音色</div>
             <select
-              className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-accent"
+              className="control-field"
               value={presetCode}
               onChange={(event) => {
                 const nextPresetCode = event.target.value;
@@ -170,7 +170,7 @@ export function SynthesisWorkbench() {
             <label className="block">
               <div className="mb-2 text-sm font-medium text-slate-700">语言标签</div>
               <input
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-accent"
+                className="control-field"
                 value={language}
                 onChange={(event) => setLanguage(event.target.value)}
                 placeholder="Chinese"
@@ -180,7 +180,7 @@ export function SynthesisWorkbench() {
             <label className="block">
               <div className="mb-2 text-sm font-medium text-slate-700">停顿时长（ms）</div>
               <input
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-accent"
+                className="control-field"
                 type="number"
                 min={0}
                 max={5000}
@@ -193,20 +193,20 @@ export function SynthesisWorkbench() {
           <label className="block">
             <div className="mb-2 text-sm font-medium text-slate-700">待合成文本</div>
             <textarea
-              className="min-h-52 w-full rounded-[28px] border border-border bg-white px-4 py-4 text-sm leading-7 outline-none transition focus:border-accent"
+              className="control-field min-h-52 rounded-[1.7rem] px-4 py-4 text-sm leading-7"
               value={textBlock}
               onChange={(event) => setTextBlock(event.target.value)}
               placeholder="每行一条文本，提交后会批量生成音频。"
             />
           </label>
 
-          <label className="flex items-center gap-3 rounded-2xl bg-[#f7f2e8] px-4 py-3 text-sm text-slate-700">
+          <label className="surface-muted flex items-center gap-3 rounded-[1.35rem] px-4 py-3 text-sm text-slate-700">
             <input type="checkbox" checked={mergeOutput} onChange={(event) => setMergeOutput(event.target.checked)} />
             额外生成一个合并后的 `final.wav`
           </label>
 
           {selectedPreset ? (
-            <div className="rounded-[28px] border border-border bg-[#fffcf7] px-5 py-5 text-sm leading-7 text-slate-600">
+            <div className="rounded-[1.7rem] border border-white/45 bg-[rgba(255,252,247,0.88)] px-5 py-5 text-sm leading-7 text-slate-600">
               <div className="text-xs uppercase tracking-[0.18em] text-slate-400">当前音色说明</div>
               <div className="mt-2 text-base font-medium text-panel-strong">{selectedPreset.name}</div>
               <p className="mt-3">{selectedPreset.instruct}</p>
@@ -216,37 +216,37 @@ export function SynthesisWorkbench() {
             </div>
           ) : null}
 
-          {error ? <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-          {notice ? <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div> : null}
+          {error ? <div className="rounded-[1.35rem] bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+          {notice ? <div className="rounded-[1.35rem] bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div> : null}
 
           <button
             type="submit"
             disabled={isSubmitting || !selectedPreset?.reference_audio_path}
-            className="flex w-full items-center justify-center rounded-2xl bg-panel-strong px-4 py-3 text-sm font-semibold text-white transition hover:opacity-92 disabled:cursor-not-allowed disabled:opacity-60"
+            className="action-button action-button-primary flex w-full disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "合成中..." : selectedPreset?.reference_audio_path ? "提交合成任务" : "请先生成参考音频"}
           </button>
         </form>
       </section>
 
-      <section className="rounded-[32px] border border-border bg-panel p-6 shadow-[0_24px_60px_rgba(24,34,48,0.08)] lg:p-8">
-        <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Recent Jobs</div>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-panel-strong">最近任务</h2>
+      <section className="surface-panel rounded-[2rem] p-6 lg:p-8">
+        <div className="section-kicker">Recent Jobs</div>
+        <h2 className="section-title mt-2 text-panel-strong">最近任务</h2>
         <div className="mt-6 space-y-4">
           {jobs.length === 0 ? (
-            <div className="rounded-[28px] border border-dashed border-border bg-[#fffcf7] px-5 py-6 text-sm leading-7 text-slate-500">
+            <div className="rounded-[1.7rem] border border-dashed border-border bg-[rgba(255,255,255,0.62)] px-5 py-6 text-sm leading-7 text-slate-500">
               还没有任务记录。提交一次批量合成后，这里会展示输出路径和失败原因。
             </div>
           ) : null}
 
           {jobs.map((job) => (
-            <article key={job.id} className="rounded-[28px] border border-border bg-[#fffcf7] p-5">
+            <article key={job.id} className="rounded-[1.7rem] border border-white/45 bg-[rgba(255,252,247,0.88)] p-5 shadow-[0_14px_34px_rgba(77,52,25,0.06)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-[0.18em] text-slate-500">{job.job_code}</div>
-                  <h3 className="mt-2 text-lg font-semibold text-panel-strong">{job.preset_code}</h3>
+                  <h3 className="display-font mt-2 text-2xl font-semibold text-panel-strong">{job.preset_code}</h3>
                 </div>
-                <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-amber-950">{job.status}</span>
+                <span className={`status-pill ${job.status === "completed" ? "status-ready" : job.status === "failed" ? "status-failed" : "status-running"}`}>{job.status}</span>
               </div>
               <div className="mt-4 text-sm leading-7 text-slate-600">
                 共 {job.input_payload.texts?.length ?? 0} 条文本，语言 {job.input_payload.language ?? "--"}

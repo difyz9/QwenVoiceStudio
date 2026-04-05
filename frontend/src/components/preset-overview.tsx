@@ -101,48 +101,48 @@ export function PresetOverview() {
   }
 
   return (
-    <section className="rounded-[32px] border border-border bg-panel p-6 shadow-[0_24px_60px_rgba(24,34,48,0.08)] lg:p-8">
+    <section className="surface-panel rounded-[2rem] p-6 lg:p-8">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Preset Library</div>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-panel-strong">系统预置音色</h2>
+          <div className="section-kicker">Preset Library</div>
+          <h2 className="section-title mt-2 text-panel-strong">系统预置音色</h2>
         </div>
         <div className="text-sm text-slate-500">数据来自 PostgreSQL 初始化种子与后续业务沉淀。</div>
       </div>
 
-      {error ? <div className="mt-6 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-      {notice ? <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div> : null}
-      {isLoading ? <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-600">正在读取预置音色列表...</div> : null}
+      {error ? <div className="mt-6 rounded-[1.35rem] bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+      {notice ? <div className="mt-6 rounded-[1.35rem] bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{notice}</div> : null}
+      {isLoading ? <div className="mt-6 rounded-[1.35rem] bg-slate-100 px-4 py-3 text-sm text-slate-600">正在读取预置音色列表...</div> : null}
 
       {!isLoading && !error && presets.some((preset) => preset.reference_audio_status !== "ready") ? (
-        <div className="mt-6 rounded-[28px] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-7 text-amber-900">
+        <div className="mt-6 rounded-[1.6rem] border border-amber-200 bg-amber-50/90 px-5 py-4 text-sm leading-7 text-amber-900">
           当前部分预置音色还没有进入可试听状态。你可以直接在音色库里发起生成，生成过程中刷新页面也会持续显示状态。Docker CPU 环境下首次生成通常需要 1 到 3 分钟。
         </div>
       ) : null}
 
       {!isLoading && !error && presets.length === 0 ? (
-        <div className="mt-6 rounded-[28px] border border-dashed border-border bg-[#fffcf7] px-5 py-6 text-sm leading-7 text-slate-500">
+        <div className="mt-6 rounded-[1.6rem] border border-dashed border-border bg-[rgba(255,255,255,0.66)] px-5 py-6 text-sm leading-7 text-slate-500">
           当前还没有可展示的音色。先去“音色设计”创建一个 preset，或检查后端初始化种子是否已导入。
         </div>
       ) : null}
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         {presets.map((preset) => (
-          <article key={preset.id} className="rounded-[28px] border border-border bg-[#fffcf7] p-5">
+          <article key={preset.id} className="rounded-[1.8rem] border border-white/45 bg-[rgba(255,252,247,0.88)] p-5 shadow-[0_16px_40px_rgba(77,52,25,0.06)]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{preset.preset_code}</div>
-                <h3 className="mt-2 text-2xl font-semibold tracking-tight text-panel-strong">{preset.name}</h3>
+                <h3 className="display-font mt-2 text-3xl font-semibold tracking-tight text-panel-strong">{preset.name}</h3>
               </div>
-              <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-amber-950">{preset.language}</span>
+              <span className="status-pill status-waiting">{preset.language}</span>
             </div>
             <p className="mt-4 text-sm leading-7 text-slate-600">{preset.instruct}</p>
-            <div className="mt-5 rounded-2xl bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+            <div className="surface-muted mt-5 rounded-[1.35rem] px-4 py-4 text-sm leading-7 text-slate-600">
               <div className="mb-1 text-xs uppercase tracking-[0.18em] text-slate-400">参考文本</div>
               {preset.ref_text}
             </div>
 
-            <div className="mt-4 rounded-2xl bg-white px-4 py-4">
+            <div className="surface-muted mt-4 rounded-[1.35rem] px-4 py-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="text-xs uppercase tracking-[0.18em] text-slate-400">参考音频试听</div>
@@ -169,7 +169,7 @@ export function PresetOverview() {
                           current === preset.preset_code ? null : preset.preset_code,
                         );
                       }}
-                      className="rounded-full bg-panel-strong px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                      className="action-button action-button-primary"
                     >
                       {expandedPresetCode === preset.preset_code ? "收起试听" : "试听音色"}
                     </button>
@@ -180,8 +180,8 @@ export function PresetOverview() {
                       onClick={() => {
                         void handleMaterialize(preset.preset_code);
                       }}
-                      className={`rounded-full px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                        preset.reference_audio_status === "failed" ? "bg-rose-600 hover:opacity-92" : "bg-accent hover:opacity-92"
+                      className={`action-button text-white disabled:cursor-not-allowed disabled:opacity-60 ${
+                        preset.reference_audio_status === "failed" ? "action-button-danger" : "action-button-accent"
                       }`}
                     >
                       {preset.reference_audio_status === "generating"
@@ -194,9 +194,9 @@ export function PresetOverview() {
 
                   <Link
                     href={`/synthesis?preset=${encodeURIComponent(preset.preset_code)}`}
-                    className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    className={`action-button ${
                       preset.reference_audio_status === "ready" && preset.reference_audio_path
-                        ? "bg-[#f2e8d9] text-slate-900 hover:bg-[#eadbc4]"
+                        ? "action-button-secondary"
                         : "pointer-events-none bg-slate-200 text-slate-500"
                     }`}
                     aria-disabled={!(preset.reference_audio_status === "ready" && preset.reference_audio_path)}

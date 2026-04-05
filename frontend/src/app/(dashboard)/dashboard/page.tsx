@@ -26,18 +26,26 @@ const quickCards = [
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-      <section className="rounded-[32px] bg-panel p-6 shadow-[0_24px_60px_rgba(24,34,48,0.08)] lg:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <div className="text-xs uppercase tracking-[0.24em] text-slate-500">Overview</div>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-panel-strong">统一管理音色资产与语音生产任务</h1>
+    <div className="space-y-7">
+      <section className="hero-panel p-6 lg:p-8">
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="section-kicker">Overview</div>
+            <h1 className="page-title mt-3 text-panel-strong">统一管理音色资产与语音生产任务</h1>
             <p className="mt-4 text-base leading-8 text-slate-600">
               这一版先提供登录、预置音色展示、系统摘要与基础后台结构，后续会继续接入音色设计、批量任务执行与音频管理能力。
             </p>
           </div>
-          <div className="rounded-3xl bg-accent px-5 py-4 text-sm font-medium text-white shadow-lg shadow-amber-300/30">
-            默认管理员：admin / admin123
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:w-[25rem]">
+            <div className="surface-panel rounded-[1.5rem] px-5 py-4">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Current Stack</div>
+              <div className="display-font mt-3 text-2xl font-semibold text-panel-strong">Next.js · FastAPI</div>
+            </div>
+            <div className="rounded-[1.5rem] bg-[linear-gradient(180deg,var(--accent),var(--accent-strong))] px-5 py-4 text-sm font-medium text-white shadow-[0_18px_40px_rgba(169,92,44,0.28)]">
+              <div className="text-xs uppercase tracking-[0.18em] text-white/70">Default Admin</div>
+              <div className="mt-3 text-base font-semibold">admin / admin123</div>
+            </div>
           </div>
         </div>
       </section>
@@ -46,14 +54,14 @@ export default function DashboardPage() {
 
       <section className="grid gap-5 lg:grid-cols-3">
         {quickCards.map((card) => (
-          <article key={card.title} className="rounded-[28px] border border-border bg-panel p-6 shadow-[0_18px_46px_rgba(24,34,48,0.06)]">
-            <div className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">Module</div>
-            <h2 className="mt-4 text-2xl font-semibold tracking-tight text-panel-strong">{card.title}</h2>
+          <article key={card.title} className="surface-panel rounded-[1.8rem] p-6">
+            <div className="section-kicker">Module</div>
+            <h2 className="section-title mt-4 text-panel-strong">{card.title}</h2>
             <p className="mt-4 text-sm leading-7 text-slate-600">{card.description}</p>
             <div className="mt-6">
               <Link
                 href={card.href}
-                className="inline-flex rounded-full bg-panel-strong px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                className="action-button action-button-primary"
               >
                 {card.action}
               </Link>

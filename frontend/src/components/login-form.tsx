@@ -46,7 +46,7 @@ export function LoginForm() {
       <label className="block">
         <div className="mb-2 text-sm font-medium text-slate-700">用户名</div>
         <input
-          className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-accent"
+          className="control-field"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           autoComplete="username"
@@ -56,7 +56,7 @@ export function LoginForm() {
       <label className="block">
         <div className="mb-2 text-sm font-medium text-slate-700">密码</div>
         <input
-          className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition focus:border-accent"
+          className="control-field"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -64,12 +64,12 @@ export function LoginForm() {
         />
       </label>
 
-      {error ? <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+      {error ? <div className="rounded-[1.35rem] bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 
       <button
         type="submit"
         disabled={isPending}
-        className="flex w-full items-center justify-center rounded-2xl bg-panel-strong px-4 py-3 text-sm font-semibold text-white transition hover:opacity-92 disabled:cursor-not-allowed disabled:opacity-60"
+        className="action-button action-button-primary flex w-full disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending ? "登录中..." : "进入管理后台"}
       </button>

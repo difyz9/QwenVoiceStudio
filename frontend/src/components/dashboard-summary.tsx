@@ -64,12 +64,12 @@ export function DashboardSummary() {
 
   return (
     <section className="space-y-4">
-      {error ? <div className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+      {error ? <div className="rounded-[1.35rem] bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <article key={card.label} className="rounded-[28px] border border-border bg-panel px-6 py-5 shadow-[0_18px_46px_rgba(24,34,48,0.06)]">
-            <div className="text-xs uppercase tracking-[0.22em] text-slate-500">{card.label}</div>
-            <div className="mt-4 text-3xl font-semibold tracking-tight text-panel-strong">{card.value}</div>
+          <article key={card.label} className="stat-card px-6 py-5">
+            <div className="section-kicker">{card.label}</div>
+            <div className="display-font mt-4 text-4xl font-semibold tracking-tight text-panel-strong">{card.value}</div>
             {isLoading ? <div className="mt-3 text-xs text-slate-400">正在同步系统摘要...</div> : null}
           </article>
         ))}
