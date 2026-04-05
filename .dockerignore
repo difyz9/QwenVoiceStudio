@@ -1,0 +1,15 @@
+.git
+.gitignore
+.DS_Store
+.venv
+node_modules
+frontend/node_modules
+frontend/.next
+backend/.pytest_cache
+backend/**/__pycache__
+outputs
+models
+postgres_data
+*.pyc
+*.pyo
+*.pyd

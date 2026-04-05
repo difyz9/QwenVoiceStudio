@@ -11,17 +11,7 @@
 !.yarn/versions
 
 # testing
-.venv
-models/
-outputs/
 /coverage
-backend/.pytest_cache/
-backend/**/__pycache__/
-backend/**/*.pyc
-frontend/node_modules/
-frontend/.next/
-postgres_data/
-assets/voice_presets/
 
 # next.js
 /.next/
@@ -42,7 +32,6 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-!.env.example
 
 # vercel
 .vercel
