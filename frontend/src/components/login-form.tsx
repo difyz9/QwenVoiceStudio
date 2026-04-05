@@ -26,8 +26,8 @@ export function LoginForm() {
       });
 
       if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-        throw new Error(payload?.detail ?? "登录失败，请检查用户名和密码。");
+        const payload = (await response.json().catch(() => null)) as { detail?: string; message?: string } | null;
+        throw new Error(payload?.message ?? payload?.detail ?? "登录失败，请检查用户名和密码。");
       }
 
       startTransition(() => {

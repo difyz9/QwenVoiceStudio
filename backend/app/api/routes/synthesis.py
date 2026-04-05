@@ -5,24 +5,25 @@ from backend.app.api.deps import get_current_user
 from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.models.voice_preset import VoicePreset
+from backend.app.schemas.common import ApiResponse, success_response
 from backend.app.schemas.synthesis import SynthesisJobCreateRequest, SynthesisJobResponse
 from backend.app.services.synthesis import create_synthesis_job, list_recent_jobs
 
 router = APIRouter()
 
 
-@router.get("/jobs", response_model=list[SynthesisJobResponse])
-def get_jobs(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[SynthesisJobResponse]:
+@router.get("/jobs", response_model=ApiResponse[list[SynthesisJobResponse]])
+def get_jobs(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> ApiResponse[list[SynthesisJobResponse]]:
     jobs = list_recent_jobs(db)
-    return [SynthesisJobResponse.model_validate(job) for job in jobs]
+    return success_response([SynthesisJobResponse.model_validate(job) for job in jobs])
 
 
-@router.post("/jobs", response_model=SynthesisJobResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/jobs", response_model=ApiResponse[SynthesisJobResponse], status_code=status.HTTP_201_CREATED)
 def create_job(
     payload: SynthesisJobCreateRequest,
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> SynthesisJobResponse:
+) -> ApiResponse[SynthesisJobResponse]:
     preset = db.query(VoicePreset).filter(VoicePreset.preset_code == payload.preset_code).first()
     if not preset:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Preset not found")
@@ -43,4 +44,4 @@ def create_job(
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
-    return SynthesisJobResponse.model_validate(job)
+    return success_response(SynthesisJobResponse.model_validate(job), "Synthesis job created successfully")

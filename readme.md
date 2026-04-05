@@ -29,6 +29,7 @@ Qwen Voice Studio 是一个基于 Qwen3-TTS 的开源语音工作台，提供从
 - 从音色库一键跳转到合成页
 - 基于 preset 的批量语音合成
 - 合成结果写入 `outputs/synthesis_jobs/<job_code>/`
+- 项目内置 Swagger / ReDoc 接口文档
 - Docker Compose 一键启动前后端和数据库
 
 ## 项目截图建议
@@ -128,6 +129,14 @@ docker compose up --build
 http://127.0.0.1:3000
 ```
 
+接口文档入口：
+
+```text
+http://127.0.0.1:3000/api/docs
+http://127.0.0.1:3000/api/redoc
+http://127.0.0.1:3000/api/openapi.json
+```
+
 默认管理员账号：
 
 - 用户名：`admin`
@@ -162,6 +171,50 @@ http://127.0.0.1:3000
 - 数据库中 `reference_audio_status` 是否为 `failed`
 - `assets/voice_presets/<preset_code>/` 下是否生成了 `ref.wav`
 - `docker compose logs app` 是否出现异常
+
+## 接口文档
+
+项目已经内置 FastAPI Swagger UI 和 ReDoc，并通过当前 Next.js 项目统一暴露，不需要额外记忆单独的后端端口。
+
+- Swagger UI：`http://127.0.0.1:3000/api/docs`
+- ReDoc：`http://127.0.0.1:3000/api/redoc`
+- OpenAPI JSON：`http://127.0.0.1:3000/api/openapi.json`
+
+文档已经适配当前项目的 `/api/backend/*` 代理路径，因此 Swagger 页面中的 `Try it out` 可以直接对现有接口发起请求。
+
+## 接口响应规范
+
+除音频文件流这类二进制响应外，项目内 JSON API 统一采用以下响应结构：
+
+```json
+{
+	"code": 0,
+	"message": "ok",
+	"data": {}
+}
+```
+
+约定如下：
+
+- `code`：业务状态码，成功固定为 `0`，失败时通常与 HTTP 状态码一致
+- `message`：面向前后端联调的统一消息文本
+- `data`：实际业务数据；列表接口返回数组，详情接口返回对象
+
+错误响应示例：
+
+```json
+{
+	"code": 404,
+	"message": "Preset not found",
+	"data": null
+}
+```
+
+这样可以保证：
+
+- 前端请求层只需要做一次统一解包
+- Swagger / ReDoc 中的接口契约更一致
+- 后续接入更多页面、SDK 或第三方调用时更容易维护
 
 ## 关键目录
 

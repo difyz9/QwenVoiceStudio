@@ -10,6 +10,16 @@ export class BackendRequestError extends Error {
   }
 }
 
+type ApiEnvelope<T> = {
+  code: number;
+  message: string;
+  data: T;
+};
+
+function isApiEnvelope<T>(payload: unknown): payload is ApiEnvelope<T> {
+  return typeof payload === "object" && payload !== null && "code" in payload && "message" in payload && "data" in payload;
+}
+
 let endSessionPromise: Promise<void> | null = null;
 
 export async function endSession() {
@@ -49,13 +59,14 @@ export async function fetchBackendJson<T>(input: RequestInfo | URL, init: Reques
   }
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new BackendRequestError(payload?.detail ?? "请求失败，请稍后重试。", response.status);
+    const payload = (await response.json().catch(() => null)) as { detail?: string; message?: string } | null;
+    throw new BackendRequestError(payload?.message ?? payload?.detail ?? "请求失败，请稍后重试。", response.status);
   }
 
   if (response.status === 204) {
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  const payload = (await response.json()) as ApiEnvelope<T> | T;
+  return isApiEnvelope<T>(payload) ? payload.data : payload;
 }

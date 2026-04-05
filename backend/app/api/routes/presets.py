@@ -10,6 +10,7 @@ from backend.app.api.deps import get_current_user
 from backend.app.db.session import get_db
 from backend.app.models.user import User
 from backend.app.models.voice_preset import VoicePreset
+from backend.app.schemas.common import ApiResponse, success_response
 from backend.app.schemas.preset import DesignedPresetCreateRequest, VoicePresetResponse
 from backend.app.services.voice_design import (
     create_designed_preset,
@@ -23,10 +24,10 @@ router = APIRouter()
 settings = get_settings()
 
 
-@router.get("", response_model=list[VoicePresetResponse])
-def list_presets_route(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> list[VoicePresetResponse]:
+@router.get("", response_model=ApiResponse[list[VoicePresetResponse]])
+def list_presets_route(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> ApiResponse[list[VoicePresetResponse]]:
     presets = list_voice_presets(db)
-    return [VoicePresetResponse.model_validate(preset) for preset in presets]
+    return success_response([VoicePresetResponse.model_validate(preset) for preset in presets])
 
 
 @router.get("/{preset_code}/reference-audio")
@@ -55,22 +56,22 @@ def get_reference_audio(
     return FileResponse(audio_path, media_type=media_type or "audio/wav", filename=audio_path.name)
 
 
-@router.post("/{preset_code}/materialize", response_model=VoicePresetResponse)
+@router.post("/{preset_code}/materialize", response_model=ApiResponse[VoicePresetResponse])
 def materialize_preset_route(
     preset_code: str,
     background_tasks: BackgroundTasks,
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> VoicePresetResponse:
+) -> ApiResponse[VoicePresetResponse]:
     preset = db.query(VoicePreset).filter(VoicePreset.preset_code == preset_code).first()
     if not preset:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Preset not found")
 
     if preset.reference_audio_status == "generating":
-        return VoicePresetResponse.model_validate(preset)
+        return success_response(VoicePresetResponse.model_validate(preset), "Preset generation is already running")
 
     if preset.reference_audio_path and preset.reference_audio_status == "ready":
-        return VoicePresetResponse.model_validate(preset)
+        return success_response(VoicePresetResponse.model_validate(preset), "Reference audio is already ready")
 
     try:
         queued = queue_preset_reference_audio_generation(db, preset)
@@ -82,15 +83,15 @@ def materialize_preset_route(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
     background_tasks.add_task(run_preset_reference_audio_generation, preset_code)
-    return VoicePresetResponse.model_validate(queued)
+    return success_response(VoicePresetResponse.model_validate(queued), "Preset reference audio queued")
 
 
-@router.post("/design", response_model=VoicePresetResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/design", response_model=ApiResponse[VoicePresetResponse], status_code=status.HTTP_201_CREATED)
 def design_preset(
     payload: DesignedPresetCreateRequest,
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> VoicePresetResponse:
+) -> ApiResponse[VoicePresetResponse]:
     try:
         preset = create_designed_preset(db, payload)
     except ValueError as exc:
@@ -100,4 +101,4 @@ def design_preset(
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
-    return VoicePresetResponse.model_validate(preset)
+    return success_response(VoicePresetResponse.model_validate(preset), "Preset created successfully")

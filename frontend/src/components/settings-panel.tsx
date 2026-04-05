@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useEffect, useState } from "react";
+import Link from "next/link";
 
 import { fetchBackendJson } from "@/lib/backend-client";
 
@@ -98,6 +99,21 @@ export function SettingsPanel() {
           </div>
           <div className="rounded-[1.7rem] bg-[linear-gradient(180deg,rgba(217,234,215,0.78),rgba(241,248,239,0.9))] px-5 py-5">
             设置页目前提供的是运行态检查，不会修改服务端配置。等后端开放设置接口后，这里可以继续扩展保存动作。
+          </div>
+          <div className="rounded-[1.7rem] bg-[rgba(255,252,247,0.88)] px-5 py-5 shadow-[0_14px_34px_rgba(77,52,25,0.05)]">
+            <div className="section-kicker">API Docs</div>
+            <div className="mt-3 text-base font-medium text-panel-strong">项目已内置 Swagger 与 ReDoc 接口文档</div>
+            <p className="mt-2 text-sm leading-7 text-slate-600">
+              可以直接通过项目访问接口说明，并在 Swagger 页面里对现有 API 发起调试请求。
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link href="/api/docs" target="_blank" className="action-button action-button-primary">
+                打开 Swagger
+              </Link>
+              <Link href="/api/redoc" target="_blank" className="action-button action-button-secondary">
+                打开 ReDoc
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,12 @@ export type SessionUser = {
   status: string;
 };
 
+type ApiEnvelope<T> = {
+  code: number;
+  message: string;
+  data: T;
+};
+
 const BACKEND_INTERNAL_URL = process.env.BACKEND_INTERNAL_URL ?? "http://127.0.0.1:8000";
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
@@ -29,7 +35,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       return null;
     }
 
-    return (await response.json()) as SessionUser;
+    const payload = (await response.json()) as ApiEnvelope<SessionUser> | SessionUser;
+    return typeof payload === "object" && payload !== null && "data" in payload ? payload.data : payload;
   } catch {
     return null;
   }

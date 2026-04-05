@@ -1,13 +1,16 @@
 from contextlib import asynccontextmanager
 
 from sqlalchemy import text
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.app.api.routes import auth, presets, synthesis, system, tasks
 from backend.app.core.config import get_settings
 from backend.app.db.session import SessionLocal, engine
 from backend.app.models import Base
+from backend.app.schemas.common import ApiErrorResponse
 from backend.app.services.bootstrap import bootstrap_system
 
 settings = get_settings()
@@ -38,8 +41,36 @@ async def lifespan(_: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
+    description="Voice design, preset management, synthesis jobs, system health, and task orchestration APIs.",
+    openapi_url="/api/openapi.json",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ApiErrorResponse(code=exc.status_code, message=str(exc.detail), data=None).model_dump(),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content=ApiErrorResponse(code=422, message="Validation failed", data={"errors": exc.errors()}).model_dump(),
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(_: Request, __: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=500,
+        content=ApiErrorResponse(code=500, message="Internal server error", data=None).model_dump(),
+    )
 
 app.add_middleware(
     CORSMiddleware,

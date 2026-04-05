@@ -6,6 +6,7 @@ from backend.app.db.session import get_db
 from backend.app.models.synthesis_job import SynthesisJob
 from backend.app.models.user import User
 from backend.app.models.voice_preset import VoicePreset
+from backend.app.schemas.common import ApiResponse, success_response
 from backend.app.schemas.task import TaskDetailResponse, TaskSummaryResponse
 from backend.app.services.synthesis import create_synthesis_job
 from backend.app.services.voice_design import queue_preset_reference_audio_generation, run_preset_reference_audio_generation
@@ -67,12 +68,12 @@ def _build_synthesis_task_detail(job: SynthesisJob) -> TaskDetailResponse:
     )
 
 
-@router.get("", response_model=list[TaskSummaryResponse])
+@router.get("", response_model=ApiResponse[list[TaskSummaryResponse]])
 def list_tasks(
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     limit: int = Query(default=50, ge=1, le=200),
-) -> list[TaskSummaryResponse]:
+) -> ApiResponse[list[TaskSummaryResponse]]:
     presets = db.query(VoicePreset).order_by(VoicePreset.created_at.desc()).all()
     synthesis_jobs = db.query(SynthesisJob).order_by(SynthesisJob.created_at.desc()).limit(limit).all()
 
@@ -88,37 +89,37 @@ def list_tasks(
         tasks.append(_build_synthesis_task(job))
 
     tasks.sort(key=lambda item: item.created_at, reverse=True)
-    return tasks[:limit]
+    return success_response(tasks[:limit])
 
 
-@router.get("/{task_code:path}", response_model=TaskDetailResponse)
+@router.get("/{task_code:path}", response_model=ApiResponse[TaskDetailResponse])
 def get_task_detail(
     task_code: str,
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> TaskDetailResponse:
+) -> ApiResponse[TaskDetailResponse]:
     if task_code.startswith("preset:"):
         preset_code = task_code.split(":", 1)[1]
         preset = db.query(VoicePreset).filter(VoicePreset.preset_code == preset_code).first()
         if not preset or preset.reference_audio_status == "missing":
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
-        return _build_preset_task_detail(preset)
+        return success_response(_build_preset_task_detail(preset))
 
     job = db.query(SynthesisJob).filter(SynthesisJob.job_code == task_code).first()
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
-    return _build_synthesis_task_detail(job)
+    return success_response(_build_synthesis_task_detail(job))
 
 
-@router.post("/{task_code:path}/retry", response_model=TaskDetailResponse)
+@router.post("/{task_code:path}/retry", response_model=ApiResponse[TaskDetailResponse])
 def retry_task(
     task_code: str,
     background_tasks: BackgroundTasks,
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> TaskDetailResponse:
+) -> ApiResponse[TaskDetailResponse]:
     if task_code.startswith("preset:"):
         preset_code = task_code.split(":", 1)[1]
         preset = db.query(VoicePreset).filter(VoicePreset.preset_code == preset_code).first()
@@ -129,7 +130,7 @@ def retry_task(
 
         queued = queue_preset_reference_audio_generation(db, preset)
         background_tasks.add_task(run_preset_reference_audio_generation, preset_code)
-        return _build_preset_task_detail(queued)
+        return success_response(_build_preset_task_detail(queued), "Task retry queued")
 
     job = db.query(SynthesisJob).filter(SynthesisJob.job_code == task_code).first()
     if not job:
@@ -163,4 +164,4 @@ def retry_task(
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
-    return _build_synthesis_task_detail(retried_job)
+    return success_response(_build_synthesis_task_detail(retried_job), "Task retried successfully")
