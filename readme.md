@@ -315,14 +315,6 @@ uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 - 更完整的系统设置页
 - OpenAPI 文档与 API 使用说明
 
-
-<center>
-  <img src="img/wechat.jpg" alt="Roadmap" style="max-width: 100%; height: auto;" />
-    <img src="img/wechatpay.jpg" alt="Roadmap" style="max-width: 100%; height: auto;" />
-      <img src="img/qq_001.jpg" alt="Roadmap" style="max-width: 100%; height: auto;" />
-</center>
-
-
 ## 常见问题
 
 ### 1. 点击“生成参考音频”后目录为空
@@ -358,3 +350,29 @@ uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 - FastAPI
 - Next.js
 - PostgreSQL
+
+
+
+<div align="center">
+
+没有公司支持，没有团队协作，每一次更新、每一个 bug 修复、每一次文档完善，都是在深夜和碎片时间里一点点打磨出来的。
+
+如果这个项目对你有帮助、为你节省了时间或解决了问题，欢迎通过**打赏赞助**支持开发者。
+
+一杯咖啡、一份奶茶，都是对创作者最大的认可与鼓励，也能让项目走得更远、更稳。
+
+所有收入将用于服务器、域名、工具订阅及后续功能开发，让项目保持活跃、不断进化。
+
+
+**如果这个项目对你有帮助，请点一个 ⭐Star！**
+
+**💬 QQ 交流群：773066052**
+
+<img src="img/220421_706.jpg" alt="QQ群二维码" width="180"/>
+<img src="img/751763091471.jpg" alt="微信二维码" width="180"/>
+<img src="img/a3763091471.jpg" alt="打赏二维码" width="180"/>
+
+
+Made with ❤️ by [difyz9](https://github.com/difyz9)
+
+</div>
