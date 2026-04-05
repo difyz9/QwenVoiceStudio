@@ -14,7 +14,12 @@ router = APIRouter()
 settings = get_settings()
 
 
-@router.post("/login", response_model=ApiResponse[LoginResponse])
+@router.post(
+    "/login",
+    response_model=ApiResponse[LoginResponse],
+    summary="Administrator login",
+    description="Validate credentials, create a JWT session token, and persist it in the `access_token` cookie.",
+)
 def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)) -> ApiResponse[LoginResponse]:
     user = db.query(User).filter(User.username == payload.username).first()
     if not user or not verify_password(payload.password, user.password_hash):
@@ -33,12 +38,22 @@ def login(payload: LoginRequest, response: Response, db: Session = Depends(get_d
     return success_response(LoginResponse(access_token=token, user=UserResponse.model_validate(user)), "Login successful")
 
 
-@router.post("/logout", response_model=ApiResponse[dict[str, bool]])
+@router.post(
+    "/logout",
+    response_model=ApiResponse[dict[str, bool]],
+    summary="Logout current session",
+    description="Clear the `access_token` cookie and end the current authenticated session.",
+)
 def logout(response: Response) -> ApiResponse[dict[str, bool]]:
     response.delete_cookie(key="access_token", path="/")
     return success_response({"loggedOut": True}, "Logout successful")
 
 
-@router.get("/me", response_model=ApiResponse[UserResponse])
+@router.get(
+    "/me",
+    response_model=ApiResponse[UserResponse],
+    summary="Get current user",
+    description="Return the authenticated user bound to the current session cookie.",
+)
 def me(user: User = Depends(get_current_user)) -> ApiResponse[UserResponse]:
     return success_response(UserResponse.model_validate(user))

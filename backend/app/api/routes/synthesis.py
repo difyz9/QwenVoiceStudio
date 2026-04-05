@@ -12,13 +12,24 @@ from backend.app.services.synthesis import create_synthesis_job, list_recent_job
 router = APIRouter()
 
 
-@router.get("/jobs", response_model=ApiResponse[list[SynthesisJobResponse]])
+@router.get(
+    "/jobs",
+    response_model=ApiResponse[list[SynthesisJobResponse]],
+    summary="List synthesis jobs",
+    description="Return recent synthesis jobs with output metadata and failure information when available.",
+)
 def get_jobs(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> ApiResponse[list[SynthesisJobResponse]]:
     jobs = list_recent_jobs(db)
     return success_response([SynthesisJobResponse.model_validate(job) for job in jobs])
 
 
-@router.post("/jobs", response_model=ApiResponse[SynthesisJobResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/jobs",
+    response_model=ApiResponse[SynthesisJobResponse],
+    status_code=status.HTTP_201_CREATED,
+    summary="Create synthesis job",
+    description="Submit a batch synthesis request for an existing preset and return the created job record.",
+)
 def create_job(
     payload: SynthesisJobCreateRequest,
     _: User = Depends(get_current_user),

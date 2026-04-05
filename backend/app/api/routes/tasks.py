@@ -68,7 +68,12 @@ def _build_synthesis_task_detail(job: SynthesisJob) -> TaskDetailResponse:
     )
 
 
-@router.get("", response_model=ApiResponse[list[TaskSummaryResponse]])
+@router.get(
+    "",
+    response_model=ApiResponse[list[TaskSummaryResponse]],
+    summary="List unified tasks",
+    description="Return a unified task feed composed of preset reference-audio generation and synthesis jobs.",
+)
 def list_tasks(
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -92,7 +97,12 @@ def list_tasks(
     return success_response(tasks[:limit])
 
 
-@router.get("/{task_code:path}", response_model=ApiResponse[TaskDetailResponse])
+@router.get(
+    "/{task_code:path}",
+    response_model=ApiResponse[TaskDetailResponse],
+    summary="Get task detail",
+    description="Return detailed task information including input payload, outputs, source object, and optional design content.",
+)
 def get_task_detail(
     task_code: str,
     _: User = Depends(get_current_user),
@@ -113,7 +123,12 @@ def get_task_detail(
     return success_response(_build_synthesis_task_detail(job))
 
 
-@router.post("/{task_code:path}/retry", response_model=ApiResponse[TaskDetailResponse])
+@router.post(
+    "/{task_code:path}/retry",
+    response_model=ApiResponse[TaskDetailResponse],
+    summary="Retry task",
+    description="Retry a failed or completed task. Preset tasks are re-queued, synthesis tasks are recreated from stored input payload.",
+)
 def retry_task(
     task_code: str,
     background_tasks: BackgroundTasks,

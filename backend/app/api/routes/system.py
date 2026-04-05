@@ -13,12 +13,22 @@ router = APIRouter()
 settings = get_settings()
 
 
-@router.get("/health", response_model=ApiResponse[HealthResponse])
+@router.get(
+    "/health",
+    response_model=ApiResponse[HealthResponse],
+    summary="Health check",
+    description="Lightweight service health endpoint used by the frontend runtime panel and deployment checks.",
+)
 def health() -> ApiResponse[HealthResponse]:
     return success_response(HealthResponse(status="ok", service=settings.app_name))
 
 
-@router.get("/summary", response_model=ApiResponse[SummaryResponse])
+@router.get(
+    "/summary",
+    response_model=ApiResponse[SummaryResponse],
+    summary="Runtime summary",
+    description="Return high-level runtime information, current user, preset counts, and environment metadata.",
+)
 def summary(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> ApiResponse[SummaryResponse]:
     preset_count = db.query(VoicePreset).count()
     return success_response(

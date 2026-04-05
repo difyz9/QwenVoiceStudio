@@ -24,13 +24,22 @@ router = APIRouter()
 settings = get_settings()
 
 
-@router.get("", response_model=ApiResponse[list[VoicePresetResponse]])
+@router.get(
+    "",
+    response_model=ApiResponse[list[VoicePresetResponse]],
+    summary="List presets",
+    description="Return all available voice presets with their reference-audio readiness state.",
+)
 def list_presets_route(_: User = Depends(get_current_user), db: Session = Depends(get_db)) -> ApiResponse[list[VoicePresetResponse]]:
     presets = list_voice_presets(db)
     return success_response([VoicePresetResponse.model_validate(preset) for preset in presets])
 
 
-@router.get("/{preset_code}/reference-audio")
+@router.get(
+    "/{preset_code}/reference-audio",
+    summary="Stream preset reference audio",
+    description="Return the generated reference-audio file for a preset as a binary audio response.",
+)
 def get_reference_audio(
     preset_code: str,
     _: User = Depends(get_current_user),
@@ -56,7 +65,12 @@ def get_reference_audio(
     return FileResponse(audio_path, media_type=media_type or "audio/wav", filename=audio_path.name)
 
 
-@router.post("/{preset_code}/materialize", response_model=ApiResponse[VoicePresetResponse])
+@router.post(
+    "/{preset_code}/materialize",
+    response_model=ApiResponse[VoicePresetResponse],
+    summary="Generate preset reference audio",
+    description="Queue or return the reference-audio generation state for an existing preset built from stored design text.",
+)
 def materialize_preset_route(
     preset_code: str,
     background_tasks: BackgroundTasks,
@@ -86,7 +100,13 @@ def materialize_preset_route(
     return success_response(VoicePresetResponse.model_validate(queued), "Preset reference audio queued")
 
 
-@router.post("/design", response_model=ApiResponse[VoicePresetResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/design",
+    response_model=ApiResponse[VoicePresetResponse],
+    status_code=status.HTTP_201_CREATED,
+    summary="Create designed preset",
+    description="Create a new preset directly from design instructions and a reference script, then persist its generated assets.",
+)
 def design_preset(
     payload: DesignedPresetCreateRequest,
     _: User = Depends(get_current_user),
