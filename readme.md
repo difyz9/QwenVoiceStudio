@@ -315,6 +315,14 @@ uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 - 更完整的系统设置页
 - OpenAPI 文档与 API 使用说明
 
+
+<center>
+  <img src="img/wechat.jpg" alt="Roadmap" style="max-width: 100%; height: auto;" />
+    <img src="img/wechatpay.jpg" alt="Roadmap" style="max-width: 100%; height: auto;" />
+      <img src="img/qq_001.jpg" alt="Roadmap" style="max-width: 100%; height: auto;" />
+</center>
+
+
 ## 常见问题
 
 ### 1. 点击“生成参考音频”后目录为空
