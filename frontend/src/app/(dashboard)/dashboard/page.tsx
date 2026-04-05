@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { DashboardSummary } from "@/components/dashboard-summary";
 import { PresetOverview } from "@/components/preset-overview";
 
@@ -5,14 +7,20 @@ const quickCards = [
   {
     title: "音色设计",
     description: "设计新音色并沉淀到预置音色库，用于后续批量复用。",
+    href: "/voice-design",
+    action: "进入音色设计",
   },
   {
     title: "语音合成",
     description: "选择已有音色，批量生成多条语音并自动合并输出。",
+    href: "/synthesis",
+    action: "进入语音合成",
   },
   {
     title: "任务执行",
-    description: "通过 JSON 数组任务配置，驱动业务音频生产流程。",
+    description: "进入统一任务中心，查看参考音频生成与语音合成记录。",
+    href: "/tasks",
+    action: "打开任务中心",
   },
 ];
 
@@ -42,6 +50,14 @@ export default function DashboardPage() {
             <div className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">Module</div>
             <h2 className="mt-4 text-2xl font-semibold tracking-tight text-panel-strong">{card.title}</h2>
             <p className="mt-4 text-sm leading-7 text-slate-600">{card.description}</p>
+            <div className="mt-6">
+              <Link
+                href={card.href}
+                className="inline-flex rounded-full bg-panel-strong px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+              >
+                {card.action}
+              </Link>
+            </div>
           </article>
         ))}
       </section>

@@ -4,7 +4,7 @@ from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.api.routes import auth, presets, synthesis, system
+from backend.app.api.routes import auth, presets, synthesis, system, tasks
 from backend.app.core.config import get_settings
 from backend.app.db.session import SessionLocal, engine
 from backend.app.models import Base
@@ -51,5 +51,6 @@ app.add_middleware(
 
 app.include_router(system.router, prefix="/api/v1/system", tags=["system"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
 app.include_router(presets.router, prefix="/api/v1/presets", tags=["presets"])
 app.include_router(synthesis.router, prefix="/api/v1/synthesis", tags=["synthesis"])
