@@ -1,6 +1,6 @@
 # Qwen Voice Studio
 
-Qwen Voice Studio 是一个基于 Qwen3-TTS 的开源语音工作台，提供从音色设计、预置音色管理、参考音频生成到批量语音合成的一体化流程。
+Qwen Voice Studio 是一个基于 [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) 的开源语音工作台，提供从音色设计、预置音色管理、参考音频生成到批量语音合成的一体化流程。
 
 当前项目采用以下技术栈：
 
@@ -121,6 +121,12 @@ models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
 ./scripts/download_models.sh
 ```
 
+如果只想下载某一个模型，可以在后面追加模型名，例如：
+
+```bash
+./scripts/download_models.sh modelscope Qwen3-TTS-12Hz-1.7B-VoiceDesign
+```
+
 默认通过 ModelScope 下载以下模型到 `models/` 目录：
 
 - `Qwen3-TTS-Tokenizer-12Hz`
@@ -134,6 +140,12 @@ models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
 
 ```bash
 ./scripts/download_models.sh huggingface
+```
+
+使用 Hugging Face 下载单个模型示例：
+
+```bash
+./scripts/download_models.sh huggingface Qwen3-TTS-12Hz-1.7B-Base
 ```
 
 建议在中国大陆网络环境下优先使用 ModelScope；如果你已经配置好 Hugging Face 访问环境，也可以直接使用 Hugging Face 下载。

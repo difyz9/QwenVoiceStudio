@@ -39,7 +39,7 @@ services:
       QWEN_TTS_MODEL: Qwen/Qwen3-TTS-12Hz-1.7B-Base
       QWEN_TTS_VOICE_DESIGN_MODEL: /app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
     ports:
-      - "3000:3000"
+      - "3090:3000"
     volumes:
       - ./models:/app/models
       - ./outputs:/app/outputs
