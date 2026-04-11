@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.config import get_settings
 from backend.app.core.security import hash_password
-from backend.app.models.user import User
-from backend.app.models.voice_preset import VoicePreset
+from backend.app.db_models.user import User
+from backend.app.db_models.voice_preset import VoicePreset
 
 settings = get_settings()
 

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.security import decode_token
 from backend.app.db.session import get_db
-from backend.app.models.user import User
+from backend.app.db_models.user import User
 
 cookie_auth = APIKeyCookie(
     name="access_token",

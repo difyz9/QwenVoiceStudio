@@ -5,7 +5,7 @@ from backend.app.api.deps import get_current_user
 from backend.app.core.config import get_settings
 from backend.app.core.security import create_access_token, verify_password
 from backend.app.db.session import get_db
-from backend.app.models.user import User
+from backend.app.db_models.user import User
 from backend.app.schemas.auth import LoginRequest, LoginResponse
 from backend.app.schemas.common import ApiResponse, success_response
 from backend.app.schemas.user import UserResponse
