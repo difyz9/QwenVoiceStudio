@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from backend.app.core.config import get_settings
 from backend.app.api.deps import get_current_user
 from backend.app.db.session import get_db
-from backend.app.models.user import User
-from backend.app.models.voice_preset import VoicePreset
+from backend.app.db_models.user import User
+from backend.app.db_models.voice_preset import VoicePreset
 from backend.app.schemas.common import ApiResponse, success_response
 from backend.app.schemas.preset import DesignedPresetCreateRequest, VoicePresetResponse
 from backend.app.services.voice_design import (

@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from backend.app.api.routes import auth, presets, synthesis, system, tasks
 from backend.app.core.config import get_settings
 from backend.app.db.session import SessionLocal, engine
-from backend.app.models import Base
+from backend.app.db_models import Base
 from backend.app.schemas.common import ApiErrorResponse
 from backend.app.services.bootstrap import bootstrap_system
 
