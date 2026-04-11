@@ -115,6 +115,31 @@ models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
 
 这意味着模型不会被打包进镜像，而是直接从本地目录挂载进容器。
 
+仓库已提供一键下载脚本：
+
+```bash
+./scripts/download_models.sh
+```
+
+默认通过 ModelScope 下载以下模型到 `models/` 目录：
+
+- `Qwen3-TTS-Tokenizer-12Hz`
+- `Qwen3-TTS-12Hz-1.7B-CustomVoice`
+- `Qwen3-TTS-12Hz-1.7B-VoiceDesign`
+- `Qwen3-TTS-12Hz-1.7B-Base`
+- `Qwen3-TTS-12Hz-0.6B-CustomVoice`
+- `Qwen3-TTS-12Hz-0.6B-Base`
+
+如果你希望改用 Hugging Face 下载，可执行：
+
+```bash
+./scripts/download_models.sh huggingface
+```
+
+建议在中国大陆网络环境下优先使用 ModelScope；如果你已经配置好 Hugging Face 访问环境，也可以直接使用 Hugging Face 下载。
+
+脚本会自动安装所需 CLI 工具，并将模型保存到仓库根目录下的 `models/` 中。
+
 ### 启动服务
 
 ```bash
