@@ -39,7 +39,19 @@ services:
       QWEN_TTS_MODEL: Qwen/Qwen3-TTS-12Hz-1.7B-Base
       QWEN_TTS_VOICE_DESIGN_MODEL: /app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
     ports:
-      - "3000:3000"
+      - "3070:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/system/health', timeout=5).getcode() == 200 else 1)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     volumes:
       - ./models:/app/models
       - ./outputs:/app/outputs

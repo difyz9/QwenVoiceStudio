@@ -107,6 +107,137 @@ Qwen Voice Studio 是一个基于 Qwen3-TTS 的开源语音工作台，提供从
 models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
 ```
 
+项目依赖的官方模型仓库是：
+
+```text
+Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+```
+
+官方说明同时支持两种使用方式：
+
+- 直接在代码里传 Hugging Face 模型 ID，由 `qwen-tts` 运行时自动下载
+- 先手动下载到本地目录，再把本地路径传给 `Qwen3TTSModel.from_pretrained(...)`
+
+当前项目为了避免容器启动时临时拉权重，默认采用第二种方式，也就是“先下载到本地，再通过卷挂载给容器”。
+
+#### 获取模型方式一：Hugging Face
+
+适合可以稳定访问 Hugging Face 的环境。
+
+先安装下载工具：
+
+```bash
+pip install -U "huggingface_hub[cli]"
+```
+
+然后在仓库根目录执行：
+
+```bash
+huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign --local-dir ./models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+```
+
+如果你同时希望把合成时使用的 Base 模型也固定为本地目录，建议一并下载：
+
+```bash
+huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-Base --local-dir ./models/Qwen3-TTS-12Hz-1.7B-Base
+```
+
+#### 获取模型方式二：ModelScope
+
+适合中国大陆网络环境。Qwen 官方仓库中也提供了对应下载方式。
+
+```bash
+pip install -U modelscope
+modelscope download --model Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign --local_dir ./models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+```
+
+如果也要本地化 Base 模型：
+
+```bash
+modelscope download --model Qwen/Qwen3-TTS-12Hz-1.7B-Base --local_dir ./models/Qwen3-TTS-12Hz-1.7B-Base
+```
+
+#### 目录结构要求
+
+下载完成后，仓库中的模型目录应当类似这样：
+
+```text
+models/
+├── Qwen3-TTS-12Hz-1.7B-VoiceDesign/
+│   ├── config.json
+│   ├── generate_config.json
+│   ├── model-00001-of-0000x.safetensors
+│   ├── ...
+│   └── tokenizer_config.json
+└── Qwen3-TTS-12Hz-1.7B-Base/
+	├── config.json
+	├── generate_config.json
+	├── model-00001-of-0000x.safetensors
+	├── ...
+	└── tokenizer_config.json
+```
+
+不要把额外的嵌套目录包进去。也就是说，容器里最终需要直接看到：
+
+```text
+/app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign/config.json
+```
+
+而不是：
+
+```text
+/app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign/Qwen3-TTS-12Hz-1.7B-VoiceDesign/config.json
+```
+
+#### 项目中的配置方式
+
+当前仓库已经采用卷挂载方式：
+
+```yaml
+- ./models:/app/models
+```
+
+并且 `docker-compose.yml` 默认把 VoiceDesign 模型配置为：
+
+```yaml
+QWEN_TTS_VOICE_DESIGN_MODEL: /app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+```
+
+这意味着模型不会被打包进镜像，而是直接从宿主机目录挂载进容器。
+
+如果你也已经把 Base 模型下载到本地，建议把：
+
+```yaml
+QWEN_TTS_MODEL: Qwen/Qwen3-TTS-12Hz-1.7B-Base
+```
+
+改成：
+
+```yaml
+QWEN_TTS_MODEL: /app/models/Qwen3-TTS-12Hz-1.7B-Base
+```
+
+这样做有两个直接收益：
+
+- 容器首次启动时不需要临时联网拉模型
+- 生成合成任务时不会因为外网不可达而卡在模型下载阶段
+
+#### 启动前检查
+
+建议在启动 Docker 之前先确认这两个路径至少存在：
+
+```text
+models/Qwen3-TTS-12Hz-1.7B-VoiceDesign/config.json
+models/Qwen3-TTS-12Hz-1.7B-VoiceDesign/generate_config.json
+```
+
+如果你也下载了 Base 模型，再额外确认：
+
+```text
+models/Qwen3-TTS-12Hz-1.7B-Base/config.json
+models/Qwen3-TTS-12Hz-1.7B-Base/generate_config.json
+```
+
 当前仓库已经采用卷挂载方式：
 
 ```yaml
@@ -124,15 +255,15 @@ docker compose up --build
 启动后访问：
 
 ```text
-http://127.0.0.1:3000
+http://127.0.0.1:3070
 ```
 
 接口文档入口：
 
 ```text
-http://127.0.0.1:3000/api/docs
-http://127.0.0.1:3000/api/redoc
-http://127.0.0.1:3000/api/openapi.json
+http://127.0.0.1:3070/api/docs
+http://127.0.0.1:3070/api/redoc
+http://127.0.0.1:3070/api/openapi.json
 ```
 
 默认管理员账号：
@@ -174,9 +305,9 @@ http://127.0.0.1:3000/api/openapi.json
 
 项目已经内置 FastAPI Swagger UI 和 ReDoc，并通过当前 Next.js 项目统一暴露，不需要额外记忆单独的后端端口。
 
-- Swagger UI：`http://127.0.0.1:3000/api/docs`
-- ReDoc：`http://127.0.0.1:3000/api/redoc`
-- OpenAPI JSON：`http://127.0.0.1:3000/api/openapi.json`
+- Swagger UI：`http://127.0.0.1:3070/api/docs`
+- ReDoc：`http://127.0.0.1:3070/api/redoc`
+- OpenAPI JSON：`http://127.0.0.1:3070/api/openapi.json`
 
 文档已经适配当前项目的 `/api/backend/*` 代理路径，因此 Swagger 页面中的 `Try it out` 可以直接对现有接口发起请求。
 
