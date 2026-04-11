@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from backend.app.core.config import get_settings
 from backend.app.db.session import SessionLocal
 from backend.app.models.voice_preset import VoicePreset
+from backend.app.services.model_loader import resolve_model_source
 from backend.app.schemas.preset import DesignedPresetCreateRequest
 
 settings = get_settings()
@@ -34,7 +35,11 @@ def get_voice_design_model():
     }
     if use_cuda:
         load_kwargs["attn_implementation"] = "flash_attention_2"
-    return Qwen3TTSModel.from_pretrained(settings.qwen_tts_voice_design_model, **load_kwargs)
+    model_source = resolve_model_source(
+        settings.qwen_tts_voice_design_model,
+        config_env_name="QWEN_TTS_VOICE_DESIGN_MODEL",
+    )
+    return Qwen3TTSModel.from_pretrained(model_source, **load_kwargs)
 
 
 def create_designed_preset(db: Session, payload: DesignedPresetCreateRequest) -> VoicePreset:
