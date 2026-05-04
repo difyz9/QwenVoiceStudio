@@ -23,6 +23,8 @@ frontend/.next/
 postgres_data/
 assets/voice_presets/
 
+*.pyc
+
 # next.js
 /.next/
 /out/

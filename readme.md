@@ -82,6 +82,49 @@ Qwen Voice Studio 是一个基于 [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TT
 
 当 preset 拥有参考音频后，可以直接在合成页复用该声音，按多行文本批量生成结果。
 
+### 4. 根据字幕合成
+
+如果你已经有字幕文件，也可以直接按字幕内容和时间轴生成配音。仓库提供了示例脚本：
+
+```bash
+python examples/synthesize_from_subtitles.py \
+	--preset brand_male_01 \
+	--subtitle examples/sample_subtitles.srt \
+	--output-dir outputs/subtitle_demo
+```
+
+脚本会完成几件事：
+
+- 读取 `.srt` 字幕内容
+- 逐条生成 `cue_001.wav` 这类分句音频
+- 按字幕开始时间插入静音并输出 `final_timeline.wav`
+- 额外生成 `manifest.json` 方便对接后续剪辑流程
+
+如果字幕语言和 preset 默认语言不一致，可以追加：
+
+```bash
+--language Chinese
+```
+
+如果你希望复用已经启动好的 Docker 服务，而不是在本地脚本里直接加载模型，可以使用 API 版本：
+
+```bash
+python examples/synthesize_from_subtitles_via_api.py \
+	--base-url http://127.0.0.1:3090 \
+	--preset brand_male_01 \
+	--subtitle examples/sample_subtitles.srt \
+	--output-dir outputs/subtitle_api_demo
+```
+
+这个版本会：
+
+- 登录当前管理台后端接口
+- 读取字幕并提交 `/api/v1/synthesis/jobs`
+- 下载每条 cue 对应的 wav 文件
+- 额外输出一个按字幕时间轴重建的 `final_timeline.wav`
+
+注意：当前后端接口本身只支持批量文本合成和固定停顿合并，不直接支持按字幕绝对时间点对齐。所以 API 示例会在下载分句音频后，本地再做一次时间轴拼接。
+
 ## 快速开始
 
 ### 环境准备

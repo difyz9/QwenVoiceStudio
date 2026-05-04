@@ -21,6 +21,14 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: qwen-voice-app
+    deploy:
+      resources:
+        reservations:
+          cpus: '2.0'
+          memory: 8G
+        limits:
+          cpus: '4.0'
+          memory: 16G
     depends_on:
       postgres:
         condition: service_healthy

@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from backend.app.api.routes import auth, presets, synthesis, system, tasks
 from backend.app.core.config import get_settings
@@ -47,6 +48,8 @@ app = FastAPI(
     redoc_url="/api/redoc",
     lifespan=lifespan,
 )
+
+app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
 
 @app.exception_handler(HTTPException)
