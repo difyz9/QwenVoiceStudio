@@ -18,44 +18,44 @@ services:
     networks:
       - qwen_network
 
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: qwen-voice-app
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         cpus: '2.0'
-  #         memory: 8G
-  #       limits:
-  #         cpus: '4.0'
-  #         memory: 16G
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   environment:
-  #     APP_ENV: production
-  #     APP_NAME: Qwen Voice Studio
-  #     DATABASE_URL: postgresql+psycopg://qwen:qwen123@postgres:5432/qwen_voice_studio
-  #     JWT_SECRET: <CHANGE_ME>
-  #     JWT_EXPIRE_MINUTES: 720
-  #     ADMIN_USERNAME: admin
-  #     ADMIN_PASSWORD: admin123
-  #     BACKEND_INTERNAL_URL: http://127.0.0.1:8000
-  #     PRESET_SEED_FILE: /app/configs/voice_presets.array.example.json
-  #     PRESET_LIBRARY_DIR: /app/assets/voice_presets
-  #     SYNTHESIS_OUTPUT_DIR: /app/outputs/synthesis_jobs
-  #     QWEN_TTS_MODEL: Qwen/Qwen3-TTS-12Hz-1.7B-Base
-  #     QWEN_TTS_VOICE_DESIGN_MODEL: /app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
-  #   ports:
-  #     - "3090:3000"
-  #   volumes:
-  #     - ./models:/app/models
-  #     - ./outputs:/app/outputs
-  #     - ./assets:/app/assets
-  #   networks:
-  #     - qwen_network
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qwen-voice-app
+    deploy:
+      resources:
+        reservations:
+          cpus: '2.0'
+          memory: 8G
+        limits:
+          cpus: '4.0'
+          memory: 16G
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      APP_NAME: Qwen Voice Studio
+      DATABASE_URL: postgresql+psycopg://qwen:qwen123@postgres:5432/qwen_voice_studio
+      JWT_SECRET: <CHANGE_ME>
+      JWT_EXPIRE_MINUTES: 720
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      BACKEND_INTERNAL_URL: http://127.0.0.1:8000
+      PRESET_SEED_FILE: /app/configs/voice_presets.array.example.json
+      PRESET_LIBRARY_DIR: /app/assets/voice_presets
+      SYNTHESIS_OUTPUT_DIR: /app/outputs/synthesis_jobs
+      QWEN_TTS_MODEL: Qwen/Qwen3-TTS-12Hz-1.7B-Base
+      QWEN_TTS_VOICE_DESIGN_MODEL: /app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+    ports:
+      - "3090:3000"
+    volumes:
+      - ./models:/app/models
+      - ./outputs:/app/outputs
+      - ./assets:/app/assets
+    networks:
+      - qwen_network
 
 networks:
   qwen_network:

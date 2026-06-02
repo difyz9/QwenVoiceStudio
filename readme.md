@@ -12,6 +12,8 @@ uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 (.venv) (base) apple@apple15 qwen-tts % ./scripts/download_models.sh modelscope  Qwen3-TTS-12Hz-1.7B-Base
 
 
+./scripts/download_models.sh modelscope  Qwen3-TTS-12Hz-0.6B-Base
+
 
 cd /Users/apple/opt/difyz_0329/05/qwen-tts/frontend
 npm run dev
