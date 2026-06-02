@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from threading import Thread
 
 from sqlalchemy import text
 from fastapi import FastAPI, HTTPException, Request
@@ -36,6 +37,27 @@ async def lifespan(_: FastAPI):
     ensure_runtime_schema()
     with SessionLocal() as session:
         bootstrap_system(session)
+
+    # Preload TTS model in background so first synthesis doesn't timeout
+    def _preload_tts_model() -> None:
+        try:
+            from backend.app.services.synthesis import get_tts_model
+            get_tts_model()
+        except Exception:
+            pass  # Model loading errors handled on first actual use
+
+    Thread(target=_preload_tts_model, daemon=True).start()
+
+    # Mark stale running jobs as failed (from previous container crash/timeout)
+    with SessionLocal() as session:
+        from backend.app.db_models.synthesis_job import SynthesisJob
+        stale_jobs = session.query(SynthesisJob).filter(SynthesisJob.status == "running").all()
+        for job in stale_jobs:
+            job.status = "failed"
+            job.error_message = "Container restarted, job was interrupted."
+        if stale_jobs:
+            session.commit()
+
     yield
 
 
