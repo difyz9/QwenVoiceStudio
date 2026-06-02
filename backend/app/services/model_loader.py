@@ -25,10 +25,12 @@ def resolve_device_kwargs() -> dict[str, Any]:
             "low_cpu_mem_usage": False,
         }
 
+    # CPU 模式：不使用 device_map 和 low_cpu_mem_usage，
+    # 因为 low_cpu_mem_usage=True 会把权重放到 meta device，
+    # 再用 device_map="cpu" 时会触发 "Cannot copy out of meta tensor" 错误。
+    # 必须用 float32，CPU 不支持 float16 的部分算子。
     return {
-        "device_map": "cpu",
-        "dtype": torch.float16,
-        "low_cpu_mem_usage": True,
+        "dtype": torch.float32,
     }
 
 
