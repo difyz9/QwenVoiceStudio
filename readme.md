@@ -1,5 +1,15 @@
 # Qwen Voice Studio
 
+激活环境：
+
+source .venv/bin/activate  
+
+下载模型：
+
+(.venv) (base) apple@apple15 qwen-tts % ./scripts/download_models.sh modelscope  Qwen3-TTS-12Hz-1.7B-Base
+
+
+
 Qwen Voice Studio 是一个基于 [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) 的开源语音工作台，提供从音色设计、预置音色管理、参考音频生成到批量语音合成的一体化流程。
 
 当前项目采用以下技术栈：
