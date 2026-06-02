@@ -42,12 +42,12 @@ services:
       JWT_EXPIRE_MINUTES: 720
       ADMIN_USERNAME: admin
       ADMIN_PASSWORD: admin123
-      BACKEND_INTERNAL_URL: http://127.0.0.1:8000
-      PRESET_SEED_FILE: /app/configs/voice_presets.array.example.json
-      PRESET_LIBRARY_DIR: /app/assets/voice_presets
-      SYNTHESIS_OUTPUT_DIR: /app/outputs/synthesis_jobs
-      QWEN_TTS_MODEL: Qwen/Qwen3-TTS-12Hz-1.7B-Base
-      QWEN_TTS_VOICE_DESIGN_MODEL: /app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign
+      BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://127.0.0.1:8000}
+      PRESET_SEED_FILE: ${PRESET_SEED_FILE:-/app/configs/voice_presets.array.example.json}
+      PRESET_LIBRARY_DIR: ${PRESET_LIBRARY_DIR:-/app/assets/voice_presets}
+      SYNTHESIS_OUTPUT_DIR: ${SYNTHESIS_OUTPUT_DIR:-/app/outputs/synthesis_jobs}
+      QWEN_TTS_MODEL: ${QWEN_TTS_MODEL:-Qwen/Qwen3-TTS-12Hz-1.7B-Base}
+      QWEN_TTS_VOICE_DESIGN_MODEL: ${QWEN_TTS_VOICE_DESIGN_MODEL:-/app/models/Qwen3-TTS-12Hz-1.7B-VoiceDesign}
     ports:
       - "3090:3000"
     volumes:
