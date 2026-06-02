@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 from http.cookiejar import CookieJar
 from pathlib import Path
 from typing import Any
@@ -8,6 +9,11 @@ from urllib.parse import urljoin
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
 import soundfile as sf
+
+# Ensure project root is on path so `from examples.*` imports work
+_root = Path(__file__).resolve().parent.parent
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
 
 from examples.synthesize_from_subtitles import merge_audio_with_subtitle_timeline, parse_srt
 
@@ -52,12 +58,15 @@ def ensure_api_success(response_json: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def container_path_to_public_url(base_url: str, container_path: str) -> str:
+def container_path_to_public_url(base_url: str, container_path: str, api_prefix: str = "") -> str:
     normalized = container_path.strip()
     if normalized.startswith("/app/"):
         normalized = normalized[4:]
     if not normalized.startswith("/"):
         normalized = f"/{normalized}"
+    # When using the frontend proxy, prefix with /api/backend/
+    if api_prefix and not normalized.startswith(f"/{api_prefix}"):
+        normalized = f"/{api_prefix}{normalized}"
     return urljoin(base_url.rstrip("/") + "/", normalized.lstrip("/"))
 
 
@@ -66,6 +75,14 @@ def main() -> None:
         description="Read an SRT file, submit a preset synthesis job to the running API, and rebuild a subtitle-timed final wav locally."
     )
     parser.add_argument("--base-url", default="http://127.0.0.1:3090", help="Studio base URL exposed by Docker Compose.")
+    parser.add_argument(
+        "--api-prefix",
+        default="api/v1",
+        help=(
+            "API path prefix. When using the frontend proxy (port 3090) use 'api/backend'; "
+            "when connecting directly to the backend (port 8000) use 'api/v1'."
+        ),
+    )
     parser.add_argument("--username", default="admin", help="Login username.")
     parser.add_argument("--password", default="admin123", help="Login password.")
     parser.add_argument("--preset", required=True, help="Preset id, for example brand_male_01.")
@@ -104,7 +121,7 @@ def main() -> None:
     cookie_jar = CookieJar()
     opener = build_opener(HTTPCookieProcessor(cookie_jar))
 
-    login_url = urljoin(args.base_url.rstrip("/") + "/", "api/v1/auth/login")
+    login_url = urljoin(args.base_url.rstrip("/") + "/", f"{args.api_prefix}/auth/login")
     login_response = api_json_request(
         opener,
         "POST",
@@ -116,7 +133,7 @@ def main() -> None:
     user = login_data.get("user", {})
     print(f"Logged in as {user.get('username', args.username)}")
 
-    create_job_url = urljoin(args.base_url.rstrip("/") + "/", "api/v1/synthesis/jobs")
+    create_job_url = urljoin(args.base_url.rstrip("/") + "/", f"{args.api_prefix}/synthesis/jobs")
     payload = {
         "preset_code": args.preset,
         "texts": texts,
@@ -156,7 +173,7 @@ def main() -> None:
         if not isinstance(container_path, str):
             raise RuntimeError("Synthesis job returned an invalid output file path")
 
-        public_url = container_path_to_public_url(args.base_url, container_path)
+        public_url = container_path_to_public_url(args.base_url, container_path, api_prefix=args.api_prefix)
         local_path = output_dir / f"cue_{cue.index:03d}.wav"
         download_binary(opener, public_url, local_path, timeout=120)
 
@@ -186,7 +203,7 @@ def main() -> None:
     merged_audio_path = job.get("merged_audio_path")
     downloaded_backend_merge = None
     if isinstance(merged_audio_path, str) and merged_audio_path:
-        backend_merge_url = container_path_to_public_url(args.base_url, merged_audio_path)
+        backend_merge_url = container_path_to_public_url(args.base_url, merged_audio_path, api_prefix=args.api_prefix)
         downloaded_backend_merge = output_dir / "final_backend_merge.wav"
         download_binary(opener, backend_merge_url, downloaded_backend_merge, timeout=120)
         print(f"Downloaded backend merged audio to {downloaded_backend_merge}")
@@ -225,8 +242,9 @@ if __name__ == "__main__":
     main()
 
 
-    # python examples/synthesize_from_subtitles_via_api.py \
+# python examples/synthesize_from_subtitles_via_api.py \
 #   --base-url http://127.0.0.1:3090 \
+#   --api-prefix api/backend \
 #   --preset brand_male_01 \
 #   --subtitle examples/sample_subtitles.srt \
 #   --output-dir outputs/subtitle_api_demo
