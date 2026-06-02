@@ -2,11 +2,19 @@
 
 激活环境：
 
-source .venv/bin/activate  
+cd /Users/apple/opt/difyz_0329/05/qwen-tts
+source .venv/bin/activate
+uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+
 
 下载模型：
 
 (.venv) (base) apple@apple15 qwen-tts % ./scripts/download_models.sh modelscope  Qwen3-TTS-12Hz-1.7B-Base
+
+
+
+cd /Users/apple/opt/difyz_0329/05/qwen-tts/frontend
+npm run dev
 
 
 

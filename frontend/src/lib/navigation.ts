@@ -15,6 +15,11 @@ export const navigationItems = [
     description: "设计新音色与沉淀预置",
   },
   {
+    href: "/voice-clone",
+    label: "声音克隆",
+    description: "上传音频创建克隆音色",
+  },
+  {
     href: "/synthesis",
     label: "语音合成",
     description: "单条与批量任务入口",

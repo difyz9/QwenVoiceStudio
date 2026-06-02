@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from backend.app.core.config import get_settings
 from backend.app.db_models.synthesis_job import SynthesisJob
 from backend.app.db_models.voice_preset import VoicePreset
-from backend.app.services.model_loader import resolve_model_source
+from backend.app.services.model_loader import resolve_device_kwargs, resolve_model_source
 
 settings = get_settings()
 
@@ -26,14 +26,7 @@ def get_tts_model():
             "Qwen TTS runtime is not installed. Install backend dependencies before running synthesis."
         ) from exc
 
-    use_cuda = torch.cuda.is_available()
-    load_kwargs = {
-        "device_map": "cuda:0" if use_cuda else "cpu",
-        "dtype": torch.bfloat16 if use_cuda else torch.float16,
-        "low_cpu_mem_usage": not use_cuda,
-    }
-    if use_cuda:
-        load_kwargs["attn_implementation"] = "flash_attention_2"
+    load_kwargs = resolve_device_kwargs()
     model_source = resolve_model_source(settings.qwen_tts_model, config_env_name="QWEN_TTS_MODEL")
     return Qwen3TTSModel.from_pretrained(model_source, **load_kwargs)
 

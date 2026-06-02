@@ -1,4 +1,35 @@
 from pathlib import Path
+from typing import Any
+
+
+def resolve_device_kwargs() -> dict[str, Any]:
+    """Select the best available compute device for model inference.
+
+    Priority: CUDA > MPS (Apple Silicon) > CPU.
+    Returns a kwargs dict suitable for Qwen3TTSModel.from_pretrained().
+    """
+    import torch
+
+    if torch.cuda.is_available():
+        return {
+            "device_map": "cuda:0",
+            "dtype": torch.bfloat16,
+            "low_cpu_mem_usage": False,
+            "attn_implementation": "flash_attention_2",
+        }
+
+    if torch.backends.mps.is_available():
+        return {
+            "device_map": "mps",
+            "dtype": torch.float16,
+            "low_cpu_mem_usage": False,
+        }
+
+    return {
+        "device_map": "cpu",
+        "dtype": torch.float16,
+        "low_cpu_mem_usage": True,
+    }
 
 
 def resolve_model_source(model_ref: str, *, config_env_name: str) -> str:

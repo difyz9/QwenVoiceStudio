@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from backend.app.core.config import get_settings
 from backend.app.db.session import SessionLocal
 from backend.app.db_models.voice_preset import VoicePreset
-from backend.app.services.model_loader import resolve_model_source
+from backend.app.services.model_loader import resolve_device_kwargs, resolve_model_source
 from backend.app.schemas.preset import DesignedPresetCreateRequest
 
 settings = get_settings()
@@ -27,14 +27,7 @@ def get_voice_design_model():
             "Qwen TTS runtime is not installed. Install backend dependencies before running voice design."
         ) from exc
 
-    use_cuda = torch.cuda.is_available()
-    load_kwargs = {
-        "device_map": "cuda:0" if use_cuda else "cpu",
-        "dtype": torch.bfloat16 if use_cuda else torch.float16,
-        "low_cpu_mem_usage": not use_cuda,
-    }
-    if use_cuda:
-        load_kwargs["attn_implementation"] = "flash_attention_2"
+    load_kwargs = resolve_device_kwargs()
     model_source = resolve_model_source(
         settings.qwen_tts_voice_design_model,
         config_env_name="QWEN_TTS_VOICE_DESIGN_MODEL",
@@ -204,6 +197,89 @@ def rebuild_manifest(db: Session) -> None:
 
     manifest_path = settings.preset_library_dir / "index.json"
     manifest_path.write_text(json.dumps({"presets": manifest}, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def create_cloned_preset(
+    db: Session,
+    *,
+    audio_data: bytes,
+    preset_code: str,
+    name: str,
+    language: str,
+    ref_text: str,
+) -> VoicePreset:
+    preset_code = slugify(preset_code)
+    existing = db.query(VoicePreset).filter(VoicePreset.preset_code == preset_code).first()
+    if existing:
+        raise ValueError(f"Preset '{preset_code}' already exists.")
+
+    preset_dir = settings.preset_library_dir / preset_code
+    if preset_dir.exists():
+        raise ValueError(f"Preset asset directory already exists: {preset_dir}")
+
+    preset_dir.mkdir(parents=True, exist_ok=False)
+
+    try:
+        import io
+
+        import numpy as np
+        import soundfile as sf
+
+        # Try to read uploaded audio (support WAV/FLAC/OGG natively via soundfile)
+        try:
+            audio_buffer = io.BytesIO(audio_data)
+            wav_data, sample_rate = sf.read(audio_buffer)
+        except Exception:
+            # Fallback to librosa for broader format support (MP3 etc.)
+            try:
+                import librosa as _librosa
+
+                audio_buffer = io.BytesIO(audio_data)
+                mono_data, sample_rate = _librosa.load(audio_buffer, sr=None, mono=True)
+                wav_data = mono_data
+            except Exception:
+                raise ValueError(
+                    "无法读取上传的音频文件，请确保文件为有效的 WAV/MP3/FLAC/OGG 格式。"
+                )
+
+        reference_audio_path = preset_dir / "ref.wav"
+        reference_text_path = preset_dir / "ref.txt"
+        metadata_path = preset_dir / "metadata.json"
+
+        sf.write(reference_audio_path, wav_data, sample_rate)
+        reference_text_path.write_text(ref_text, encoding="utf-8")
+
+        metadata = {
+            "id": preset_code,
+            "name": name,
+            "language": language,
+            "ref_text": ref_text,
+            "source_type": "clone",
+            "reference_audio": str(reference_audio_path.resolve()),
+            "sample_rate": sample_rate,
+        }
+        metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        preset = VoicePreset(
+            preset_code=preset_code,
+            name=name,
+            language=language,
+            instruct="",
+            ref_text=ref_text,
+            reference_audio_path=str(reference_audio_path.resolve()),
+            reference_audio_status="ready",
+            reference_audio_error=None,
+            source_type="clone",
+        )
+        db.add(preset)
+        db.commit()
+        db.refresh(preset)
+
+        rebuild_manifest(db)
+        return preset
+    except Exception:
+        cleanup_preset_dir(preset_dir)
+        raise
 
 
 def cleanup_preset_dir(preset_dir: Path) -> None:

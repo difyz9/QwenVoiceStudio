@@ -1,7 +1,7 @@
 import mimetypes
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -13,6 +13,7 @@ from backend.app.db_models.voice_preset import VoicePreset
 from backend.app.schemas.common import ApiResponse, success_response
 from backend.app.schemas.preset import DesignedPresetCreateRequest, VoicePresetResponse
 from backend.app.services.voice_design import (
+    create_cloned_preset,
     create_designed_preset,
     list_presets as list_voice_presets,
     materialize_preset_reference_audio,
@@ -122,3 +123,59 @@ def design_preset(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
     return success_response(VoicePresetResponse.model_validate(preset), "Preset created successfully")
+
+
+@router.post(
+    "/clone",
+    response_model=ApiResponse[VoicePresetResponse],
+    status_code=status.HTTP_201_CREATED,
+    summary="Create cloned preset",
+    description="Upload a reference audio file with its transcript to create a voice clone preset.",
+)
+async def clone_preset(
+    file: UploadFile = File(..., description="Audio file (WAV/MP3/FLAC/OGG)"),
+    preset_code: str = Form(..., min_length=1, max_length=64),
+    name: str = Form(..., min_length=1, max_length=120),
+    language: str = Form(default="Chinese", max_length=32),
+    ref_text: str = Form(..., min_length=1, max_length=500),
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ApiResponse[VoicePresetResponse]:
+    if not file.content_type or not file.content_type.startswith("audio/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="请上传有效的音频文件（WAV/MP3/FLAC/OGG）。",
+        )
+
+    audio_data = await file.read()
+
+    if not audio_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="上传的音频文件为空。",
+        )
+
+    max_size = 100 * 1024 * 1024
+    if len(audio_data) > max_size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="音频文件过大，请上传不超过 100MB 的文件。",
+        )
+
+    try:
+        preset = create_cloned_preset(
+            db,
+            audio_data=audio_data,
+            preset_code=preset_code,
+            name=name,
+            language=language,
+            ref_text=ref_text,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+
+    return success_response(VoicePresetResponse.model_validate(preset), "克隆音色创建成功")
